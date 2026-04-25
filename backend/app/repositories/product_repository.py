@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session, joinedload
-from typing import list, Optional
+from typing import Optional
 from ..models.product import Product
 from ..schemas.product import ProductCreate
 

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from typing import list, Optional
+from typing import Optional
 from ..models.category import Category
 from ..schemas.category import CategoryCreate
 

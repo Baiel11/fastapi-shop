@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from typing import Dict
 from ..repositories.product_repository import ProductRepository
 from ..schemas.cart import CartItem, CartItemCreate, CartResponse, CartItemUpdate
 from fastapi import HTTPException, status
@@ -8,7 +7,7 @@ class CartService:
     def __init__(self, db: Session):
         self.product_repository = ProductRepository(db)
 
-    def add_to_cart(self, cart_data: Dict[int, int], item: CartItemCreate) -> Dict[int, int]:
+    def add_to_cart(self, cart_data: dict[int, int], item: CartItemCreate) -> dict[int, int]:
         product = self.product_repository.get_by_id(item.product_id)
         if not product:
             raise HTTPException(
@@ -23,7 +22,7 @@ class CartService:
         
         return cart_data
     
-    def update_cart_item(self, cart_data: Dict[int, int], item: CartItemUpdate) -> Dict[int, int]:
+    def update_cart_item(self, cart_data: dict[int, int], item: CartItemUpdate) -> dict[int, int]:
         if item.product_id not in cart_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -33,7 +32,7 @@ class CartService:
         cart_data[item.product_id] = item.quantity
         return cart_data
     
-    def remove_from_cart(self, cart_data: Dict[int, int], product_id: int) -> Dict[int, int]:
+    def remove_from_cart(self, cart_data: dict[int, int], product_id: int) -> dict[int, int]:
         if product_id not in cart_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -43,7 +42,7 @@ class CartService:
         del cart_data[product_id]
         return cart_data
     
-    def get_cart_details(self, cart_data: Dict[int, int]) -> CartResponse:
+    def get_cart_details(self, cart_data: dict[int, int]) -> CartResponse:
         if not cart_data:
             return CartResponse(items=[], total=0.0, items_count=0)
         
