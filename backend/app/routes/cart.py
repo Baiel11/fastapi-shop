@@ -25,11 +25,11 @@ def add_to_cart(request: AddToCartRequest, db: Session = Depends(get_db)):
     updated_cart = service.add_to_cart(request.cart, item)
     return {"cart": updated_cart}
 
-@router.put("/update", response_model=UpdateCartRequest, status_code=status.HTTP_200_OK)
+@router.put("/update", status_code=status.HTTP_200_OK)
 def update_cart_item(request: UpdateCartRequest, db: Session = Depends(get_db)):
     service = CartService(db)
     item = CartItemUpdate(product_id=request.product_id, quantity=request.quantity)
-    update_cart = service.update_cart_item(request.product_id, item)
+    update_cart = service.update_cart_item(request.cart, item)
     return {"cart": update_cart}
 
 @router.delete("/remove/{product_id}", response_model=RemoveFromCartRequest, status_code=status.HTTP_200_OK)
