@@ -1,4 +1,4 @@
-from app.database import SessionLocal, init_db
+from app.database import SessionLocal
 from app.models.category import Category
 from app.models.product import Product
 
@@ -113,9 +113,6 @@ def seed_database() -> None:
     Creates tables, categories, and products.
     """
     print("Starting database seeding...")
-
-    init_db()
-    print("Database tables created")
 
     db = SessionLocal()
 
