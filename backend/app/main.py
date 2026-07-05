@@ -1,8 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from .config import settings
+from .core.config import settings
 from .routes import products_router, categories_router, cart_router
+
+from .core.exceptions import AppException
+from .core.error_handlers import (
+    app_exception_handler,
+    http_exception_handler,
+    validation_exception_handler,
+    general_exception_handler
+)
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 app = FastAPI(
     title=settings.app_name,
@@ -20,6 +30,11 @@ app.add_middleware(
 )
 
 app.mount('/static', StaticFiles(directory=settings.static_dir), name='static')
+
+app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, general_exception_handler)
 
 app.include_router(cart_router)
 app.include_router(categories_router)

@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
 from ..repositories.product_repository import ProductRepository
 from ..schemas.cart import CartItem, CartItemCreate, CartResponse, CartItemUpdate
-from fastapi import HTTPException, status
-
+from ..core.exceptions import NotFoundException
 class CartService:
     def __init__(self, db: Session):
         self.product_repository = ProductRepository(db)
@@ -10,10 +9,7 @@ class CartService:
     def add_to_cart(self, cart_data: dict[int, int], item: CartItemCreate) -> dict[int, int]:
         product = self.product_repository.get_by_id(item.product_id)
         if not product:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                details=f'Product with id {item.product_id} not found'
-            )
+            raise NotFoundException(detail=f'Product with id {item.product_id} not found')
         
         if item.product_id in cart_data:
             cart_data[item.product_id] += item.quantity
@@ -24,20 +20,14 @@ class CartService:
     
     def update_cart_item(self, cart_data: dict[int, int], item: CartItemUpdate) -> dict[int, int]:
         if item.product_id not in cart_data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f'Product with id {item.product_id} not found in cart'
-            )
+            raise NotFoundException(detail=f'Product with id {item.product_id} not found in cart')
         
         cart_data[item.product_id] = item.quantity
         return cart_data
     
     def remove_from_cart(self, cart_data: dict[int, int], product_id: int) -> dict[int, int]:
         if product_id not in cart_data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f'Product with id {product_id} not found in cart'
-            )
+            raise NotFoundException(detail=f'Product with id {product_id} not found in cart')
         
         del cart_data[product_id]
         return cart_data

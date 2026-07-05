@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
 from ..repositories.category_repository import CategoryRepository
 from ..schemas.category import CategoryCreate, CategoryResponse
-from fastapi import HTTPException, status
-
+from ..core.exceptions import NotFoundException
 class CategoryService:
     def __init__(self, db: Session):
         self.category_repository = CategoryRepository(db)
@@ -14,10 +13,7 @@ class CategoryService:
     def get_category_by_id(self, category_id: int) -> CategoryResponse:
         category = self.category_repository.get_by_id(category_id)
         if not category:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f'Category with id {category_id} not found'
-            )
+            raise NotFoundException(detail=f'Category with id {category_id} not found')
         return CategoryResponse.model_validate(category)
     
     def create_category(self, category_data: CategoryCreate) -> CategoryResponse:

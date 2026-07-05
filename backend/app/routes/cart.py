@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import Dict
-from ..database import get_db
+from ..core.database import get_db
 from ..services.cart_service import CartService
 from ..schemas.cart import(
     CartItemCreate, CartItemUpdate, CartResponse,

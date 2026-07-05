@@ -6,8 +6,8 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from app.config import settings
-from app.database import Base
+from backend.app.core.config import settings
+from backend.app.core.database import Base
 from app.models import Category, Product
 
 config = context.config

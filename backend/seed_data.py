@@ -1,4 +1,4 @@
-from app.database import SessionLocal
+from backend.app.core.database import SessionLocal
 from app.models.category import Category
 from app.models.product import Product
 
