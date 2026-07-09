@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .core.config import settings
-from .routes import products_router, categories_router, cart_router
+from .routes import products_router, categories_router, cart_router, auth_router
 
 from .core.exceptions import AppException
 from .core.error_handlers import (
@@ -39,6 +39,7 @@ app.add_exception_handler(Exception, general_exception_handler)
 app.include_router(cart_router)
 app.include_router(categories_router)
 app.include_router(products_router)
+app.include_router(auth_router)
 
 @app.get('/')
 def root():
