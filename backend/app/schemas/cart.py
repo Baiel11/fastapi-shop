@@ -3,15 +3,15 @@ from typing import List, Optional, Dict
 from decimal import Decimal
 
 class CartItemBase(BaseModel):
-    product_id: int = Field(..., description="Product ID")
-    quantity: int = Field(..., gt=0, description="Quantity (must be greater than 0)")
+    product_id: int = Field(..., gt=0, description="Product ID")
+    quantity: int = Field(..., gt=0, le=100, description="Quantity (quantity 0-100)")
     
 class CartItemCreate(CartItemBase):
     pass
 
 class CartItemUpdate(BaseModel):
-    product_id: int = Field(..., description="Product ID")
-    quantity: int = Field(..., gt=0, description="New quantity (must be greater than 0)")
+    product_id: int = Field(..., gt=0, description="Product ID")
+    quantity: int = Field(..., gt=0, le=100, description="New quantity (quantity 0-100)")
 
 class CartItem(BaseModel):
     product_id: int = Field(..., description="Product ID")
@@ -27,14 +27,15 @@ class CartResponse(BaseModel):
     items_count: int = Field(..., description="Total number of items in cart")
 
 class AddToCartRequest(BaseModel):
-    product_id: int
-    quantity: int
-    cart: Dict[int, int] = {}
+    product_id: int = Field(..., gt=0, description="Product ID to add")
+    quantity: int = Field(..., gt=0, le=100, description="Quantity to add (1-100)")
+    cart: Dict[int, int] = Field(default_factory=dict)
+
 
 class UpdateCartRequest(BaseModel):
-    product_id: int
-    quantity: int
-    cart: Dict[int, int] = {}
+    product_id: int = Field(..., gt=0)
+    quantity: int = Field(..., gt=0, le=100)
+    cart: Dict[int, int] = Field(default_factory=dict)
 
 class RemoveFromCartRequest(BaseModel):
-    cart: Dict[int, int] = {}
+    cart: Dict[int, int] = Field(default_factory=dict)
