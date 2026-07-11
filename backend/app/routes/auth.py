@@ -3,17 +3,20 @@ from sqlalchemy.orm import Session
 
 from ..core.database import get_db
 from ..core.dependencies import get_current_user
+from ..core.limiter import limiter
 from ..services.auth_service import AuthService
 from ..schemas.auth import UserRegister, UserLogin, TokenResponse, UserResponse
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("3/minute")
 def register(data: UserRegister, db: Session = Depends(get_db)):
     service = AuthService(db)
     return service.register(data)
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit("5/minute")
 def login(data: UserLogin, db: Session = Depends(get_db)):
     service = AuthService(db)
     return service.login(data)
