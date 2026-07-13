@@ -1,16 +1,16 @@
 // frontend/src/services/api.js
 /**
- * API сервис для взаимодействия с backend.
- * Централизует все HTTP запросы к FastAPI серверу.
- * Использует axios для выполнения запросов.
+ * API service for interacting with the backend.
+ * Centralizes all HTTP requests to the FastAPI server.
+ * Uses axios for performing requests.
  */
 
 import axios from 'axios'
 
-// Базовый URL API из переменных окружения или значение по умолчанию
+// Base API URL from environment variables or default value
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
-// Создаем экземпляр axios с настройками по умолчанию
+// Create axios instance with default settings
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -18,45 +18,74 @@ const apiClient = axios.create({
   },
 })
 
+// Automatically add JWT token to every request if saved in localStorage
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
 /**
- * API методы для работы с товарами
+ * API methods for authentication
+ */
+export const authAPI = {
+  register(email, username, password) {
+    return apiClient.post('/auth/register', { email, username, password })
+  },
+  login(email, password) {
+    return apiClient.post('/auth/login', { email, password })
+  },
+  getMe() {
+    return apiClient.get('/auth/me')
+  }
+}
+
+/**
+ * API methods for products
  */
 export const productsAPI = {
   /**
-   * Получить все товары
+   * Get all products with pagination parameters
    */
-  getAll() {
-    return apiClient.get('/products')
+  getAll(params) {
+    return apiClient.get('/products', { params })
   },
 
   /**
-   * Получить товар по ID
+   * Get product by ID
    */
   getById(id) {
     return apiClient.get(`/products/${id}`)
   },
 
   /**
-   * Получить товары по категории
+   * Get products by category with pagination parameters
    */
-  getByCategory(categoryId) {
-    return apiClient.get(`/products/category/${categoryId}`)
+  getByCategory(categoryId, params) {
+    return apiClient.get(`/products/category/${categoryId}`, { params })
   },
 }
 
 /**
- * API методы для работы с категориями
+ * API methods for categories
  */
 export const categoriesAPI = {
   /**
-   * Получить все категории
+   * Get all categories
    */
   getAll() {
     return apiClient.get('/categories')
   },
 
   /**
-   * Получить категорию по ID
+   * Get category by ID
    */
   getById(id) {
     return apiClient.get(`/categories/${id}`)
@@ -64,47 +93,20 @@ export const categoriesAPI = {
 }
 
 /**
- * API методы для работы с корзиной
+ * API methods for shopping cart
  */
 export const cartAPI = {
-  /**
-   * Добавить товар в корзину
-   */
-  addItem(item, cartData) {
-    return apiClient.post('/cart/add', {
-      product_id: item.product_id,
-      quantity: item.quantity,
-      cart: cartData,
-    })
+  addItem(item) {
+    return apiClient.post('/cart/add', item)
   },
-
-  /**
-   * Получить содержимое корзины
-   */
-  getCart(cartData) {
-    return apiClient.post('/cart', cartData)
+  getCart() {
+    return apiClient.get('/cart')
   },
-
-  /**
-   * Обновить количество товара
-   */
-  updateItem(item, cartData) {
-    return apiClient.put('/cart/update', {
-      product_id: item.product_id,
-      quantity: item.quantity,
-      cart: cartData,
-    })
+  updateItem(item) {
+    return apiClient.put('/cart/update', item)
   },
-
-  /**
-   * Удалить товар из корзины
-   */
-  removeItem(productId, cartData) {
-    return apiClient.delete(`/cart/remove/${productId}`, {
-      data: {
-        cart: cartData,
-      },
-    })
+  removeItem(productId) {
+    return apiClient.delete(`/cart/remove/${productId}`)
   },
 }
 
