@@ -1,25 +1,25 @@
 <!-- frontend/src/views/CartPage.vue -->
 <!--
-  Страница корзины покупок.
-  Отображает список товаров в корзине с возможностью управления количеством.
+  Shopping cart page.
+  Displays the list of products in the cart with options to change quantity.
 -->
 
 <template>
   <div class="min-h-screen bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <!-- Заголовок -->
+      <!-- Header -->
       <div class="mb-10">
         <h1 class="text-3xl sm:text-4xl font-extrabold text-black mb-3">Shopping Cart</h1>
         <p class="text-lg text-gray-500">Review your items before checkout</p>
       </div>
 
-      <!-- Состояние загрузки -->
+      <!-- Loading state -->
       <div v-if="cartStore.loading" class="text-center py-16">
         <div class="inline-block animate-spin rounded-full h-14 w-14 border-b-4 border-black"></div>
         <p class="mt-4 text-lg text-gray-500">Loading cart...</p>
       </div>
 
-      <!-- Пустая корзина -->
+      <!-- Empty cart -->
       <div v-else-if="!cartStore.hasItems" class="text-center py-16">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -45,9 +45,9 @@
         </router-link>
       </div>
 
-      <!-- Содержимое корзины -->
+      <!-- Cart contents -->
       <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Список товаров -->
+        <!-- Product list -->
         <div class="lg:col-span-2 space-y-6">
           <CartItem
             v-for="item in cartStore.cartDetails?.items"
@@ -56,12 +56,12 @@
           />
         </div>
 
-        <!-- Итоговая информация -->
+        <!-- Order summary -->
         <div class="lg:col-span-1">
           <div class="bg-white border-2 border-gray-100 rounded-none p-8 shadow-sm sticky top-24">
             <h2 class="text-2xl font-bold text-black mb-8">Order Summary</h2>
 
-            <!-- Детали заказа -->
+            <!-- Order details -->
             <div class="space-y-6 mb-8">
               <div class="flex justify-between text-lg text-gray-600">
                 <span>Items ({{ cartStore.cartDetails?.items_count }})</span>
@@ -81,7 +81,7 @@
               </div>
             </div>
 
-            <!-- Кнопка оформления заказа -->
+            <!-- Checkout button -->
             <button
               class="w-full bg-black text-white py-4 px-6 text-lg font-semibold rounded-none hover:bg-gray-900 transition-colors mb-4"
               @click="handleCheckout"
@@ -89,7 +89,7 @@
               Proceed to Checkout
             </button>
 
-            <!-- Кнопка продолжить покупки -->
+            <!-- Continue shopping button -->
             <router-link
               to="/"
               class="block w-full bg-gray-100 text-black py-4 px-6 text-lg font-semibold rounded-none hover:bg-gray-200 transition-colors text-center"
@@ -97,13 +97,39 @@
               Continue Shopping
             </router-link>
 
-            <!-- Кнопка очистить корзину -->
-            <button
-              @click="handleClearCart"
-              class="w-full mt-6 text-base text-red-600 hover:text-red-700 transition-colors font-medium"
-            >
-              Clear Cart
-            </button>
+            <!-- Clear Cart — inline confirmation instead of window.confirm() -->
+            <div class="mt-6">
+              <div v-if="!showClearConfirm">
+                <button
+                  @click="showClearConfirm = true"
+                  class="w-full text-base text-red-500 hover:text-red-700 transition-colors font-medium"
+                >
+                  Clear Cart
+                </button>
+              </div>
+              <div
+                v-else
+                class="border-2 border-red-200 rounded-xl p-4 bg-red-50"
+              >
+                <p class="text-sm font-semibold text-red-800 mb-3">
+                  Remove all items from your cart?
+                </p>
+                <div class="flex gap-3">
+                  <button
+                    @click="confirmClearCart"
+                    class="flex-1 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Yes, clear
+                  </button>
+                  <button
+                    @click="showClearConfirm = false"
+                    class="flex-1 py-2 border-2 border-gray-300 text-sm font-bold rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -112,32 +138,35 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
 import { useCartStore } from '@/stores/cart'
+import { useToastStore } from '@/stores/toast'
 import CartItem from '@/components/CartItem.vue'
 
-const router = useRouter()
 const cartStore = useCartStore()
+const toastStore = useToastStore()
+
+// Controls the inline clear-cart confirmation UI
+const showClearConfirm = ref(false)
 
 /**
- * Оформление заказа (placeholder)
+ * Checkout placeholder — replaced alert() with a toast notification.
  */
 function handleCheckout() {
-  alert('Checkout functionality will be implemented soon!')
+  toastStore.info('Checkout functionality is coming soon!')
 }
 
 /**
- * Очистить корзину с подтверждением
+ * Clears the cart after the user confirms via the inline UI.
  */
-function handleClearCart() {
-  if (confirm('Are you sure you want to clear your cart?')) {
-    cartStore.clearCart()
-  }
+function confirmClearCart() {
+  cartStore.clearCart()
+  showClearConfirm.value = false
+  toastStore.success('Your cart has been cleared.')
 }
 
 /**
- * Загрузить данные корзины при монтировании
+ * Load cart details on mount
  */
 onMounted(async () => {
   await cartStore.fetchCartDetails()
