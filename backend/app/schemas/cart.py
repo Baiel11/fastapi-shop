@@ -5,13 +5,6 @@ from decimal import Decimal
 class CartItemBase(BaseModel):
     product_id: int = Field(..., gt=0, description="Product ID")
     quantity: int = Field(..., gt=0, le=100, description="Quantity (quantity 0-100)")
-    
-class CartItemCreate(CartItemBase):
-    pass
-
-class CartItemUpdate(BaseModel):
-    product_id: int = Field(..., gt=0, description="Product ID")
-    quantity: int = Field(..., gt=0, le=100, description="New quantity (quantity 0-100)")
 
 class CartItem(BaseModel):
     product_id: int = Field(..., description="Product ID")
@@ -21,6 +14,8 @@ class CartItem(BaseModel):
     subtotal: Decimal = Field(..., description="Total price for this item (price * quantity)")
     image_url: Optional[str] = Field(None, description="Product image URL")
 
+    model_config = {"from_attributes": True}
+
 class CartResponse(BaseModel):
     items: List[CartItem] = Field(..., description="List of items in cart")
     total: Decimal = Field(..., description="Total cart price")
@@ -29,13 +24,7 @@ class CartResponse(BaseModel):
 class AddToCartRequest(BaseModel):
     product_id: int = Field(..., gt=0, description="Product ID to add")
     quantity: int = Field(..., gt=0, le=100, description="Quantity to add (1-100)")
-    cart: Dict[int, int] = Field(default_factory=dict)
-
 
 class UpdateCartRequest(BaseModel):
     product_id: int = Field(..., gt=0)
     quantity: int = Field(..., gt=0, le=100)
-    cart: Dict[int, int] = Field(default_factory=dict)
-
-class RemoveFromCartRequest(BaseModel):
-    cart: Dict[int, int] = Field(default_factory=dict)
