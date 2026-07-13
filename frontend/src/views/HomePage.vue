@@ -38,103 +38,104 @@
             </button>
           </div>
 
-          <!-- Loading state -->
-          <div v-if="productsStore.loading" class="text-center py-12">
-            <div
-              class="inline-block animate-spin rounded-none h-12 w-12 border-b-2 border-black"
-            ></div>
-            <p class="mt-4 text-gray-500">Loading products...</p>
-          </div>
-
-          <!-- Error -->
-          <div v-else-if="productsStore.error" class="text-center py-12">
-            <p class="text-red-600 font-medium">{{ productsStore.error }}</p>
-          </div>
-
-          <!-- Product list -->
-          <div v-else-if="productsStore.filteredProducts.length > 0">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <ProductCard
-                v-for="product in productsStore.filteredProducts"
-                :key="product.id"
-                :product="product"
-              />
+          <Transition name="fade" mode="out-in">
+            <!-- Loading state with Skeleton Cards -->
+            <div v-if="productsStore.loading" key="loading">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <ProductCardSkeleton v-for="i in 9" :key="i" />
+              </div>
             </div>
 
-            <!-- Modern Numbered Pagination -->
-            <div v-if="productsStore.totalPages > 1" class="mt-12 flex justify-center items-center space-x-2">
-              <!-- Previous button -->
-              <button
-                @click="productsStore.setPage(productsStore.currentPage - 1)"
-                :disabled="productsStore.currentPage === 1"
-                class="p-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer mr-2 flex items-center justify-center"
-                aria-label="Previous page"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
+            <!-- Error -->
+            <div v-else-if="productsStore.error" class="text-center py-12" key="error">
+              <p class="text-red-600 font-medium">{{ productsStore.error }}</p>
+            </div>
 
-              <!-- Page numbers -->
-              <template v-for="(page, idx) in visiblePages" :key="idx">
-                <span
-                  v-if="page === '...'"
-                  class="px-3 py-2 text-gray-500 font-bold select-none"
-                >
-                  ...
-                </span>
+            <!-- Product list -->
+            <div v-else-if="productsStore.filteredProducts.length > 0" key="products">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <ProductCard
+                  v-for="product in productsStore.filteredProducts"
+                  :key="product.id"
+                  :product="product"
+                />
+              </div>
+
+              <!-- Modern Numbered Pagination -->
+              <div v-if="productsStore.totalPages > 1" class="mt-12 flex justify-center items-center space-x-2">
+                <!-- Previous button -->
                 <button
-                  v-else
-                  @click="productsStore.setPage(page)"
-                  :class="[
-                    'px-4 py-2 border-2 text-sm font-bold rounded-lg transition-colors cursor-pointer select-none',
-                    productsStore.currentPage === page
-                      ? 'bg-black border-black text-white'
-                      : 'border-gray-200 text-black hover:border-black'
-                  ]"
+                  @click="productsStore.setPage(productsStore.currentPage - 1)"
+                  :disabled="productsStore.currentPage === 1"
+                  class="p-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer mr-2 flex items-center justify-center"
+                  aria-label="Previous page"
                 >
-                  {{ page }}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+                  </svg>
                 </button>
-              </template>
 
-              <!-- Next button -->
-              <button
-                @click="productsStore.setPage(productsStore.currentPage + 1)"
-                :disabled="productsStore.currentPage === productsStore.totalPages"
-                class="p-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer ml-2 flex items-center justify-center"
-                aria-label="Next page"
+                <!-- Page numbers -->
+                <template v-for="(page, idx) in visiblePages" :key="idx">
+                  <span
+                    v-if="page === '...'"
+                    class="px-3 py-2 text-gray-500 font-bold select-none"
+                  >
+                    ...
+                  </span>
+                  <button
+                    v-else
+                    @click="productsStore.setPage(page)"
+                    :class="[
+                      'px-4 py-2 border-2 text-sm font-bold rounded-lg transition-colors cursor-pointer select-none',
+                      productsStore.currentPage === page
+                        ? 'bg-black border-black text-white'
+                        : 'border-gray-200 text-black hover:border-black'
+                    ]"
+                  >
+                    {{ page }}
+                  </button>
+                </template>
+
+                <!-- Next button -->
+                <button
+                  @click="productsStore.setPage(productsStore.currentPage + 1)"
+                  :disabled="productsStore.currentPage === productsStore.totalPages"
+                  class="p-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer ml-2 flex items-center justify-center"
+                  aria-label="Next page"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Empty state -->
+            <div v-else class="text-center py-12" key="empty">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-16 w-16 mx-auto text-gray-400 mb-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
-                </svg>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                />
+              </svg>
+              <p class="text-gray-500 text-lg font-medium">No products found</p>
+              <button
+                @click="productsStore.clearCategoryFilter"
+                class="mt-4 text-black hover:underline font-medium"
+              >
+                View all products
               </button>
             </div>
-          </div>
-
-          <!-- Empty state -->
-          <div v-else class="text-center py-12">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-16 w-16 mx-auto text-gray-400 mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-              />
-            </svg>
-            <p class="text-gray-500 text-lg font-medium">No products found</p>
-            <button
-              @click="productsStore.clearCategoryFilter"
-              class="mt-4 text-black hover:underline font-medium"
-            >
-              View all products
-            </button>
-          </div>
+          </Transition>
         </main>
       </div>
     </div>
@@ -142,9 +143,10 @@
 </template>
 
 <script setup>
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, watch } from 'vue'
 import { useProductsStore } from '@/stores/products'
 import ProductCard from '@/components/ProductCard.vue'
+import ProductCardSkeleton from '@/components/ProductCardSkeleton.vue'
 import CategoryFilter from '@/components/CategoryFilter.vue'
 
 const productsStore = useProductsStore()
@@ -182,9 +184,32 @@ const visiblePages = computed(() => {
 })
 
 /**
+ * Reactively scrolls the window back to the top when the page changes.
+ * Kept in the component layer as scrolling is a visual UI concern.
+ */
+watch(
+  () => productsStore.currentPage,
+  () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+)
+
+/**
  * Load data when the component is mounted
  */
 onMounted(async () => {
   await Promise.all([productsStore.fetchProducts(), productsStore.fetchCategories()])
 })
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

@@ -10,11 +10,20 @@
   >
     <!-- Product image -->
     <router-link :to="`/product/${product.id}`">
-      <div class="aspect-square overflow-hidden bg-gray-100">
+      <div class="aspect-square overflow-hidden bg-gray-100 relative">
+        <!-- Pulse placeholder shown only if image loading takes longer than 150ms -->
+        <div
+          v-if="showPlaceholder"
+          class="absolute inset-0 bg-gray-200 animate-pulse"
+        ></div>
         <img
           :src="product.image_url || PLACEHOLDER_IMAGE"
           :alt="product.name"
-          class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          :class="[
+            'w-full h-full object-cover hover:scale-105 transition-all duration-500',
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          ]"
+          @load="handleImageLoad"
           @error="handleImageError"
         />
       </div>
@@ -50,7 +59,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
@@ -73,6 +82,19 @@ const router = useRouter()
 
 // State
 const adding = ref(false)
+const imageLoaded = ref(false)
+const showPlaceholder = ref(false)
+
+// Start a small timer: only show pulsing placeholder if it takes > 150ms to load (prevents flickering on cached items)
+const placeholderTimeout = setTimeout(() => {
+  if (!imageLoaded.value) {
+    showPlaceholder.value = true
+  }
+}, 150)
+
+onUnmounted(() => {
+  clearTimeout(placeholderTimeout)
+})
 
 /**
  * Adds the product to cart.
@@ -99,9 +121,21 @@ async function handleAddToCart() {
 }
 
 /**
+ * Handles image completion.
+ */
+function handleImageLoad() {
+  imageLoaded.value = true
+  showPlaceholder.value = false
+  clearTimeout(placeholderTimeout)
+}
+
+/**
  * Falls back to a local SVG placeholder if the product image URL fails.
  */
 function handleImageError(event) {
   event.target.src = PLACEHOLDER_IMAGE
+  imageLoaded.value = true
+  showPlaceholder.value = false
+  clearTimeout(placeholderTimeout)
 }
 </script>
