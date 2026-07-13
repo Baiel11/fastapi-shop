@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import Dict
 from ..core.database import get_db
+from ..core.dependencies import get_current_user
 from ..services.cart_service import CartService
 from ..schemas.cart import(
-    CartItemCreate, CartItemUpdate, CartResponse,
-    AddToCartRequest, UpdateCartRequest, RemoveFromCartRequest
+    CartResponse, AddToCartRequest, UpdateCartRequest
 )
 
 router = APIRouter(
@@ -13,27 +13,22 @@ router = APIRouter(
     tags=["cart"]
 )
 
-@router.post("", response_model=CartResponse, status_code=status.HTTP_200_OK)
-def get_cart(cart_data: Dict[int, int], db: Session = Depends(get_db)):
+@router.get("", response_model=CartResponse, status_code=status.HTTP_200_OK)
+def get_cart(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     service = CartService(db)
-    return service.get_cart_details(cart_data)
+    return service.get_cart(current_user.id)
 
-@router.post("/add", status_code=status.HTTP_200_OK)
-def add_to_cart(request: AddToCartRequest, db: Session = Depends(get_db)):
+@router.post("/add", response_model=CartResponse, status_code=status.HTTP_200_OK)
+def add_to_cart(request: AddToCartRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     service = CartService(db)
-    item = CartItemCreate(product_id=request.product_id, quantity=request.quantity)
-    updated_cart = service.add_to_cart(request.cart, item)
-    return {"cart": updated_cart}
+    return service.add_to_cart(current_user.id, request.product_id, request.quantity)
 
-@router.put("/update", status_code=status.HTTP_200_OK)
-def update_cart_item(request: UpdateCartRequest, db: Session = Depends(get_db)):
+@router.put("/update", response_model=CartResponse, status_code=status.HTTP_200_OK)
+def update_cart_item(request: UpdateCartRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     service = CartService(db)
-    item = CartItemUpdate(product_id=request.product_id, quantity=request.quantity)
-    update_cart = service.update_cart_item(request.cart, item)
-    return {"cart": update_cart}
+    return service.update_cart_item(current_user.id, request.product_id, request.quantity)
 
-@router.delete("/remove/{product_id}", response_model=RemoveFromCartRequest, status_code=status.HTTP_200_OK)
-def remove_from_cart(product_id: int, request: RemoveFromCartRequest, db: Session = Depends(get_db)):
+@router.delete("/remove/{product_id}", response_model=CartResponse, status_code=status.HTTP_200_OK)
+def remove_from_cart(product_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     service = CartService(db)
-    updated_cart = service.remove_from_cart(request.cart, product_id)
-    return {"cart": updated_cart}
+    return service.remove_from_cart(current_user.id, product_id)
