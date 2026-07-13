@@ -1,25 +1,19 @@
 // frontend/src/stores/cart.js
-/**
- * Pinia store для управления корзиной покупок.
- * Хранит состояние корзины в localStorage и синхронизирует с backend.
- * Следует принципу Single Responsibility - отвечает только за логику корзины.
- */
-
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { cartAPI } from '@/services/api'
-
-const CART_STORAGE_KEY = 'shopping_cart'
+import { useAuthStore } from './auth'
 
 export const useCartStore = defineStore('cart', () => {
-  // State - храним корзину как объект {product_id: quantity}
-  const cartItems = ref({})
+  const authStore = useAuthStore()
+
+  // State
   const cartDetails = ref(null)
   const loading = ref(false)
 
   // Getters
   const itemsCount = computed(() => {
-    return Object.values(cartItems.value).reduce((sum, qty) => sum + qty, 0)
+    return cartDetails.value?.items_count || 0
   })
 
   const totalPrice = computed(() => {
@@ -27,64 +21,22 @@ export const useCartStore = defineStore('cart', () => {
   })
 
   const hasItems = computed(() => {
-    return Object.keys(cartItems.value).length > 0
+    return (cartDetails.value?.items || []).length > 0
   })
 
   // Actions
   /**
-   * Инициализировать корзину из localStorage
-   */
-  function initCart() {
-    const savedCart = localStorage.getItem(CART_STORAGE_KEY)
-    if (savedCart) {
-      try {
-        cartItems.value = JSON.parse(savedCart)
-      } catch (e) {
-        console.error('Error parsing cart from localStorage:', e)
-        cartItems.value = {}
-      }
-    }
-  }
-
-  /**
-   * Сохранить корзину в localStorage
-   */
-  function saveCart() {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems.value))
-  }
-
-  /**
-   * Добавить товар в корзину
-   */
-  async function addToCart(productId, quantity = 1) {
-    try {
-      const item = {
-        product_id: productId,
-        quantity: quantity,
-      }
-      const response = await cartAPI.addItem(item, cartItems.value)
-      cartItems.value = response.data.cart
-      saveCart()
-      await fetchCartDetails()
-      return true
-    } catch (err) {
-      console.error('Error adding to cart:', err)
-      return false
-    }
-  }
-
-  /**
-   * Получить детальную информацию о корзине
+   * Fetch cart details from the backend DB
    */
   async function fetchCartDetails() {
-    if (!hasItems.value) {
-      cartDetails.value = { items: [], total: 0, items_count: 0 }
+    if (!authStore.isAuthenticated) {
+      cartDetails.value = null
       return
     }
 
     loading.value = true
     try {
-      const response = await cartAPI.getCart(cartItems.value)
+      const response = await cartAPI.getCart()
       cartDetails.value = response.data
     } catch (err) {
       console.error('Error fetching cart details:', err)
@@ -94,7 +46,21 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   /**
-   * Обновить количество товара
+   * Add item to cart
+   */
+  async function addToCart(productId, quantity = 1) {
+    try {
+      const response = await cartAPI.addItem({ product_id: productId, quantity })
+      cartDetails.value = response.data
+      return true
+    } catch (err) {
+      console.error('Error adding to cart:', err)
+      return false
+    }
+  }
+
+  /**
+   * Update item quantity
    */
   async function updateQuantity(productId, quantity) {
     if (quantity <= 0) {
@@ -102,14 +68,8 @@ export const useCartStore = defineStore('cart', () => {
     }
 
     try {
-      const item = {
-        product_id: productId,
-        quantity: quantity,
-      }
-      const response = await cartAPI.updateItem(item, cartItems.value)
-      cartItems.value = response.data.cart
-      saveCart()
-      await fetchCartDetails()
+      const response = await cartAPI.updateItem({ product_id: productId, quantity })
+      cartDetails.value = response.data
       return true
     } catch (err) {
       console.error('Error updating cart:', err)
@@ -118,14 +78,12 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   /**
-   * Удалить товар из корзины
+   * Remove item from cart
    */
   async function removeFromCart(productId) {
     try {
-      const response = await cartAPI.removeItem(productId, cartItems.value)
-      cartItems.value = response.data.cart
-      saveCart()
-      await fetchCartDetails()
+      const response = await cartAPI.removeItem(productId)
+      cartDetails.value = response.data
       return true
     } catch (err) {
       console.error('Error removing from cart:', err)
@@ -134,27 +92,33 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   /**
-   * Очистить корзину
+   * Reset local cart reference
    */
   function clearCart() {
-    cartItems.value = {}
     cartDetails.value = null
-    localStorage.removeItem(CART_STORAGE_KEY)
   }
 
+  // Reactively fetch cart whenever auth state changes (login / logout)
+  watch(
+    () => authStore.isAuthenticated,
+    (isAuth) => {
+      if (isAuth) {
+        fetchCartDetails()
+      } else {
+        clearCart()
+      }
+    },
+    { immediate: true }
+  )
+
   return {
-    // State
-    cartItems,
     cartDetails,
     loading,
-    // Getters
     itemsCount,
     totalPrice,
     hasItems,
-    // Actions
-    initCart,
-    addToCart,
     fetchCartDetails,
+    addToCart,
     updateQuantity,
     removeFromCart,
     clearCart,
