@@ -1,18 +1,18 @@
 <!-- frontend/src/components/ProductCard.vue -->
 <!--
-  Компонент карточки товара для отображения в каталоге.
-  Показывает основную информацию о товаре и кнопку добавления в корзину.
+  Product card component for display in catalog.
+  Shows main product information and an add-to-cart button.
 -->
 
 <template>
   <div
-    class="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-black transition-all duration-300 hover:shadow-lg"
+    class="flex flex-col h-full bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-black transition-all duration-300 hover:shadow-lg"
   >
-    <!-- Изображение товара -->
+    <!-- Product image -->
     <router-link :to="`/product/${product.id}`">
       <div class="aspect-square overflow-hidden bg-gray-100">
         <img
-          :src="product.image_url"
+          :src="product.image_url || PLACEHOLDER_IMAGE"
           :alt="product.name"
           class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           @error="handleImageError"
@@ -20,24 +20,24 @@
       </div>
     </router-link>
 
-    <!-- Информация о товаре -->
-    <div class="p-4">
-      <!-- Категория -->
+    <!-- Product info -->
+    <div class="p-4 flex flex-col flex-grow">
+      <!-- Category -->
       <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">
-        {{ product.category.name }}
+        {{ product.category?.name }}
       </div>
 
-      <!-- Название товара -->
-      <router-link :to="`/product/${product.id}`">
-        <h3 class="text-lg font-semibold text-black mb-2 hover:text-gray-700 transition-colors">
+      <!-- Product name -->
+      <router-link :to="`/product/${product.id}`" class="mb-2">
+        <h3 class="text-lg font-semibold text-black hover:text-gray-700 transition-colors line-clamp-2">
           {{ product.name }}
         </h3>
       </router-link>
 
-      <!-- Цена -->
-      <p class="text-2xl font-bold text-black mb-4">${{ product.price.toFixed(2) }}</p>
+      <!-- Price -->
+      <p class="text-2xl font-bold text-black mb-4 mt-auto">${{ formatPrice(product.price) }}</p>
 
-      <!-- Кнопка добавления в корзину -->
+      <!-- Add to cart button -->
       <button
         @click="handleAddToCart"
         :disabled="adding"
@@ -45,20 +45,17 @@
       >
         {{ adding ? 'Adding...' : 'Add to Cart' }}
       </button>
-
-      <!-- Уведомление об успешном добавлении -->
-      <transition name="fade">
-        <div v-if="showNotification" class="mt-2 text-sm text-green-600 text-center font-medium">
-          ✓ Added to cart!
-        </div>
-      </transition>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
+import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toast'
+import { formatPrice, PLACEHOLDER_IMAGE } from '@/utils/format'
 
 // Props
 const props = defineProps({
@@ -68,44 +65,43 @@ const props = defineProps({
   },
 })
 
-// State
+// Stores & Router
 const cartStore = useCartStore()
+const authStore = useAuthStore()
+const toastStore = useToastStore()
+const router = useRouter()
+
+// State
 const adding = ref(false)
-const showNotification = ref(false)
 
 /**
- * Добавить товар в корзину
+ * Adds the product to cart.
+ * Redirects unauthenticated users to the login page,
+ * preserving the product detail page as the post-login redirect destination.
  */
 async function handleAddToCart() {
+  if (!authStore.isAuthenticated) {
+    toastStore.info('Please sign in to add products to your cart.')
+    router.push({ name: 'login', query: { next: `/product/${props.product.id}` } })
+    return
+  }
+
   adding.value = true
   const success = await cartStore.addToCart(props.product.id, 1)
 
   if (success) {
-    showNotification.value = true
-    setTimeout(() => {
-      showNotification.value = false
-    }, 2000)
+    toastStore.success(`"${props.product.name}" added to cart!`)
+  } else {
+    toastStore.error('Could not add product to cart. Please try again.')
   }
 
   adding.value = false
 }
 
 /**
- * Обработка ошибки загрузки изображения
+ * Falls back to a local SVG placeholder if the product image URL fails.
  */
 function handleImageError(event) {
-  event.target.src = 'https://via.placeholder.com/400x400?text=No+Image'
+  event.target.src = PLACEHOLDER_IMAGE
 }
 </script>
-
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>
