@@ -1,7 +1,7 @@
 // frontend/src/stores/products.js
 /**
- * Pinia store для управления состоянием товаров.
- * Хранит список товаров, информацию о фильтрации и состояние загрузки.
+ * Pinia store for managing product state.
+ * Stores product list, filtering, pagination, and loading state.
  */
 
 import { defineStore } from 'pinia'
@@ -16,26 +16,41 @@ export const useProductsStore = defineStore('products', () => {
   const loading = ref(false)
   const error = ref(null)
 
-  // Getters
-  const filteredProducts = computed(() => {
-    if (!selectedCategory.value) {
-      return products.value
-    }
-    return products.value.filter((product) => product.category_id === selectedCategory.value)
-  })
+  // Pagination State
+  const currentPage = ref(1)
+  const pageSize = ref(9) // 9 items per page fits a 3-column layout nicely
+  const totalProducts = ref(0)
+  const totalPages = ref(1)
 
-  const productsCount = computed(() => filteredProducts.value.length)
+  // Getters
+  // The API performs filtering, so filteredProducts is just the current page's items.
+  const filteredProducts = computed(() => products.value)
+  const productsCount = computed(() => totalProducts.value)
 
   // Actions
   /**
-   * Загрузить все товары с сервера
+   * Load products from the server considering selected category and page
    */
   async function fetchProducts() {
     loading.value = true
     error.value = null
     try {
-      const response = await productsAPI.getAll()
-      products.value = response.data.products
+      const params = {
+        page: currentPage.value,
+        size: pageSize.value,
+      }
+
+      let response
+      if (selectedCategory.value) {
+        response = await productsAPI.getByCategory(selectedCategory.value, params)
+      } else {
+        response = await productsAPI.getAll(params)
+      }
+
+      // Update state with response details
+      products.value = response.data.items
+      totalProducts.value = response.data.total
+      totalPages.value = response.data.pages
     } catch (err) {
       error.value = 'Failed to load products'
       console.error('Error fetching products:', err)
@@ -45,7 +60,7 @@ export const useProductsStore = defineStore('products', () => {
   }
 
   /**
-   * Загрузить товар по ID
+   * Load product by ID
    */
   async function fetchProductById(id) {
     loading.value = true
@@ -63,7 +78,7 @@ export const useProductsStore = defineStore('products', () => {
   }
 
   /**
-   * Загрузить все категории
+   * Load all categories
    */
   async function fetchCategories() {
     try {
@@ -75,17 +90,31 @@ export const useProductsStore = defineStore('products', () => {
   }
 
   /**
-   * Установить фильтр по категории
+   * Set category filter and load products
    */
-  function setCategory(categoryId) {
+  async function setCategory(categoryId) {
     selectedCategory.value = categoryId
+    currentPage.value = 1 // Reset to first page
+    await fetchProducts()
   }
 
   /**
-   * Сбросить фильтр категории
+   * Clear category filter and load products
    */
-  function clearCategoryFilter() {
+  async function clearCategoryFilter() {
     selectedCategory.value = null
+    currentPage.value = 1 // Reset to first page
+    await fetchProducts()
+  }
+
+  /**
+   * Navigate to a specific page
+   */
+  async function setPage(page) {
+    if (page >= 1 && page <= totalPages.value) {
+      currentPage.value = page
+      await fetchProducts()
+    }
   }
 
   return {
@@ -95,6 +124,10 @@ export const useProductsStore = defineStore('products', () => {
     selectedCategory,
     loading,
     error,
+    currentPage,
+    pageSize,
+    totalProducts,
+    totalPages,
     // Getters
     filteredProducts,
     productsCount,
@@ -104,5 +137,6 @@ export const useProductsStore = defineStore('products', () => {
     fetchCategories,
     setCategory,
     clearCategoryFilter,
+    setPage,
   }
 })
