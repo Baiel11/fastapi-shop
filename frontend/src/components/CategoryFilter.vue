@@ -5,8 +5,8 @@
 -->
 
 <template>
-  <div class="bg-white border-2 border-gray-200 rounded-lg p-6">
-    <h2 class="text-2xl font-bold text-black mb-6">Categories</h2>
+  <div class="bg-white dark:bg-zinc-900 border-2 border-gray-200 dark:border-zinc-800 rounded-lg p-6 transition-all duration-300">
+    <h2 class="text-2xl font-bold text-black dark:text-white mb-6">Categories</h2>
 
     <!-- Category list -->
     <ul class="space-y-2">
@@ -17,8 +17,8 @@
           :class="[
             'w-full text-left px-4 py-3 rounded-lg transition-all duration-200',
             !productsStore.selectedCategory
-              ? 'bg-black text-white font-semibold'
-              : 'bg-gray-50 hover:bg-gray-100 text-gray-700',
+              ? 'bg-black dark:bg-white text-white dark:text-black font-semibold'
+              : 'bg-gray-50 dark:bg-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-100',
           ]"
         >
           All Categories
@@ -35,8 +35,8 @@
           :class="[
             'w-full text-left px-4 py-3 rounded-lg transition-all duration-200',
             productsStore.selectedCategory === category.id
-              ? 'bg-black text-white font-semibold'
-              : 'bg-gray-50 hover:bg-gray-100 text-gray-700',
+              ? 'bg-black dark:bg-white text-white dark:text-black font-semibold'
+              : 'bg-gray-50 dark:bg-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-100',
           ]"
         >
           {{ category.name }}

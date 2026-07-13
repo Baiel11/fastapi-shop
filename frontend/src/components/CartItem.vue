@@ -6,11 +6,11 @@
 
 <template>
   <div
-    class="bg-white border-2 border-gray-100 rounded-none p-6 shadow-sm hover:border-gray-300 transition-colors"
+    class="bg-white dark:bg-zinc-900 border-2 border-gray-100 dark:border-zinc-800 rounded-none p-6 shadow-sm hover:border-gray-300 dark:hover:border-zinc-700 transition-all duration-300"
   >
     <div class="flex gap-6">
       <!-- Product image -->
-      <div class="w-24 h-24 flex-shrink-0">
+      <div class="w-24 h-24 flex-shrink-0 bg-gray-50 dark:bg-zinc-800">
         <img
           :src="item.image_url"
           :alt="item.name"
@@ -21,18 +21,18 @@
 
       <!-- Product info -->
       <div class="flex-grow">
-        <h3 class="text-lg font-bold text-black mb-2">
+        <h3 class="text-lg font-bold text-black dark:text-white mb-2">
           {{ item.name }}
         </h3>
-        <p class="text-gray-600 text-sm mb-3">${{ Number(item.price).toFixed(2) }} each</p>
+        <p class="text-gray-600 dark:text-zinc-400 text-sm mb-3">${{ Number(item.price).toFixed(2) }} each</p>
 
         <!-- Quantity control -->
         <div class="flex items-center gap-4">
-          <div class="flex items-center border-2 border-gray-100 rounded-none" style="color: black">
+          <div class="flex items-center border-2 border-gray-100 dark:border-zinc-800 rounded-none text-black dark:text-white">
             <button
               @click="decreaseQuantity"
               :disabled="updating"
-              class="px-3 py-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
+              class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50 cursor-pointer"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -50,14 +50,14 @@
               </svg>
             </button>
 
-            <span class="px-4 py-2 font-medium min-w-[40px] text-center">
+            <span class="px-4 py-2 font-medium min-w-[40px] text-center text-black dark:text-white">
               {{ item.quantity }}
             </span>
 
             <button
               @click="increaseQuantity"
               :disabled="updating"
-              class="px-3 py-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
+              class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50 cursor-pointer"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -80,7 +80,7 @@
           <button
             @click="handleRemove"
             :disabled="updating"
-            class="text-red-600 hover:text-red-700 transition-colors disabled:opacity-50"
+            class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors disabled:opacity-50 cursor-pointer"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -102,7 +102,7 @@
 
       <!-- Subtotal -->
       <div class="text-right">
-        <p class="text-xl font-bold text-black">${{ Number(item.subtotal).toFixed(2) }}</p>
+        <p class="text-xl font-bold text-black dark:text-white">${{ Number(item.subtotal).toFixed(2) }}</p>
       </div>
     </div>
   </div>

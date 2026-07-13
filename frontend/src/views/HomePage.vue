@@ -5,12 +5,12 @@
 -->
 
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-white dark:bg-zinc-950 transition-colors duration-300">
     <div class="max-w-7xl mx-auto px-4 py-8">
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-4xl font-extrabold text-black mb-2">Product Catalog</h1>
-        <p class="text-gray-500">Discover our amazing products</p>
+        <h1 class="text-4xl font-extrabold text-black dark:text-white mb-2">Product Catalog</h1>
+        <p class="text-gray-500 dark:text-zinc-400">Discover our amazing products</p>
       </div>
 
       <div class="flex gap-8">
@@ -23,8 +23,8 @@
         <main class="flex-grow">
           <!-- Filtering info -->
           <div class="mb-6 flex items-center justify-between">
-            <p class="text-gray-700">
-              <span class="font-bold">{{ productsStore.productsCount }}</span>
+            <p class="text-gray-700 dark:text-zinc-300">
+              <span class="font-bold text-black dark:text-white">{{ productsStore.productsCount }}</span>
               {{ productsStore.productsCount === 1 ? 'product' : 'products' }} found
             </p>
 
@@ -32,7 +32,7 @@
             <button
               v-if="productsStore.selectedCategory"
               @click="productsStore.clearCategoryFilter"
-              class="text-sm text-gray-500 hover:text-black transition-colors font-medium"
+              class="text-sm text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors font-medium cursor-pointer"
             >
               Clear filter
             </button>
@@ -48,7 +48,7 @@
 
             <!-- Error -->
             <div v-else-if="productsStore.error" class="text-center py-12" key="error">
-              <p class="text-red-600 font-medium">{{ productsStore.error }}</p>
+              <p class="text-red-600 dark:text-red-400 font-medium">{{ productsStore.error }}</p>
             </div>
 
             <!-- Product list -->
@@ -67,7 +67,7 @@
                 <button
                   @click="productsStore.setPage(productsStore.currentPage - 1)"
                   :disabled="productsStore.currentPage === 1"
-                  class="p-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer mr-2 flex items-center justify-center"
+                  class="p-2.5 border-2 border-black dark:border-white text-black dark:text-white font-bold rounded-lg transition-colors hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-current cursor-pointer mr-2 flex items-center justify-center"
                   aria-label="Previous page"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -79,7 +79,7 @@
                 <template v-for="(page, idx) in visiblePages" :key="idx">
                   <span
                     v-if="page === '...'"
-                    class="px-3 py-2 text-gray-500 font-bold select-none"
+                    class="px-3 py-2 text-gray-500 dark:text-zinc-400 font-bold select-none"
                   >
                     ...
                   </span>
@@ -89,8 +89,8 @@
                     :class="[
                       'px-4 py-2 border-2 text-sm font-bold rounded-lg transition-colors cursor-pointer select-none',
                       productsStore.currentPage === page
-                        ? 'bg-black border-black text-white'
-                        : 'border-gray-200 text-black hover:border-black'
+                        ? 'bg-black dark:bg-white border-black dark:border-white text-white dark:text-black'
+                        : 'border-gray-200 dark:border-zinc-800 text-black dark:text-white hover:border-black dark:hover:border-white'
                     ]"
                   >
                     {{ page }}
@@ -101,7 +101,7 @@
                 <button
                   @click="productsStore.setPage(productsStore.currentPage + 1)"
                   :disabled="productsStore.currentPage === productsStore.totalPages"
-                  class="p-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer ml-2 flex items-center justify-center"
+                  class="p-2.5 border-2 border-black dark:border-white text-black dark:text-white font-bold rounded-lg transition-colors hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-current cursor-pointer ml-2 flex items-center justify-center"
                   aria-label="Next page"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,7 +115,7 @@
             <div v-else class="text-center py-12" key="empty">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-16 w-16 mx-auto text-gray-400 mb-4"
+                class="h-16 w-16 mx-auto text-gray-400 dark:text-zinc-500 mb-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -127,10 +127,10 @@
                   d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                 />
               </svg>
-              <p class="text-gray-500 text-lg font-medium">No products found</p>
+              <p class="text-gray-500 dark:text-zinc-400 text-lg font-medium">No products found</p>
               <button
                 @click="productsStore.clearCategoryFilter"
-                class="mt-4 text-black hover:underline font-medium"
+                class="mt-4 text-black dark:text-white hover:underline font-medium cursor-pointer"
               >
                 View all products
               </button>

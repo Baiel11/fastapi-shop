@@ -5,12 +5,12 @@
 -->
 
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-white dark:bg-zinc-950 transition-colors duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <!-- "Back" button -->
       <button
         @click="router.push('/')"
-        class="flex items-center text-gray-600 hover:text-black transition-colors mb-8 font-medium text-lg"
+        class="flex items-center text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors mb-8 font-medium text-lg cursor-pointer"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -31,16 +31,16 @@
 
       <!-- Loading state -->
       <div v-if="loading" class="text-center py-16">
-        <div class="inline-block animate-spin rounded-full h-14 w-14 border-b-4 border-black"></div>
-        <p class="mt-4 text-lg text-gray-500">Loading product...</p>
+        <div class="inline-block animate-spin rounded-full h-14 w-14 border-b-4 border-black dark:border-white"></div>
+        <p class="mt-4 text-lg text-gray-500 dark:text-zinc-400">Loading product...</p>
       </div>
 
       <!-- Error -->
       <div v-else-if="error" class="text-center py-16">
-        <p class="text-red-600 text-lg font-medium">{{ error }}</p>
+        <p class="text-red-600 dark:text-red-400 text-lg font-medium">{{ error }}</p>
         <button
           @click="router.push('/')"
-          class="mt-6 bg-black text-white py-3 px-8 text-lg font-semibold rounded-none hover:bg-gray-900 transition-colors"
+          class="mt-6 bg-black dark:bg-white text-white dark:text-black py-3 px-8 text-lg font-semibold rounded-none hover:bg-gray-900 dark:hover:bg-zinc-100 transition-colors cursor-pointer"
         >
           Return to catalog
         </button>
@@ -49,11 +49,11 @@
       <!-- Detailed product info -->
       <div
         v-else-if="product"
-        class="bg-white border-2 border-gray-100 rounded-none shadow-sm overflow-hidden"
+        class="bg-white dark:bg-zinc-900 border-2 border-gray-100 dark:border-zinc-800 rounded-none shadow-sm overflow-hidden transition-all duration-300"
       >
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
           <!-- Image -->
-          <div class="aspect-square overflow-hidden rounded-none bg-gray-50">
+          <div class="aspect-square overflow-hidden rounded-none bg-gray-50 dark:bg-zinc-800">
             <img
               :src="product.image_url || PLACEHOLDER_IMAGE"
               :alt="product.name"
@@ -65,24 +65,24 @@
           <!-- Information -->
           <div class="flex flex-col">
             <!-- Category -->
-            <div class="text-sm text-gray-500 uppercase tracking-wider mb-3 font-medium">
+            <div class="text-sm text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-3 font-medium">
               {{ product.category?.name }}
             </div>
 
             <!-- Title -->
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-black mb-4">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-black dark:text-white mb-4">
               {{ product.name }}
             </h1>
 
             <!-- Price -->
-            <div class="text-2xl sm:text-3xl font-bold text-black mb-6">
+            <div class="text-2xl sm:text-3xl font-bold text-black dark:text-white mb-6">
               ${{ formatPrice(product.price) }}
             </div>
 
             <!-- Description -->
             <div class="mb-8">
-              <h2 class="text-xl font-bold text-black mb-3">Description</h2>
-              <p class="text-gray-600 leading-relaxed">
+              <h2 class="text-xl font-bold text-black dark:text-white mb-3">Description</h2>
+              <p class="text-gray-600 dark:text-zinc-300 leading-relaxed">
                 {{ product.description || 'No description available.' }}
               </p>
             </div>
@@ -92,16 +92,16 @@
               <button
                 @click="handleAddToCart"
                 :disabled="adding"
-                class="w-full bg-black text-white py-4 px-6 text-lg font-semibold rounded-none hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full bg-black dark:bg-white text-white dark:text-black border-2 border-black dark:border-white py-4 px-6 text-lg font-semibold rounded-none hover:bg-white dark:hover:bg-zinc-900 hover:text-black dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 dark:focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {{ adding ? 'Adding to cart...' : 'Add to Cart' }}
               </button>
             </div>
 
             <!-- Additional info -->
-            <div class="mt-8 pt-6 border-t-2 border-gray-100">
-              <p class="text-sm text-gray-500">Product ID: {{ product.id }}</p>
-              <p class="text-sm text-gray-500">Added: {{ formatDate(product.created_at) }}</p>
+            <div class="mt-8 pt-6 border-t-2 border-gray-100 dark:border-zinc-800">
+              <p class="text-sm text-gray-500 dark:text-zinc-400">Product ID: {{ product.id }}</p>
+              <p class="text-sm text-gray-500 dark:text-zinc-400">Added: {{ formatDate(product.created_at) }}</p>
             </div>
           </div>
         </div>

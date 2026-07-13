@@ -11,7 +11,7 @@
         <div
           v-for="toast in toastStore.toasts"
           :key="toast.id"
-          class="flex items-start gap-4 px-5 py-4 rounded-xl border-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none"
+          class="flex items-start gap-4 px-5 py-4 rounded-xl border-2 cursor-pointer select-none transition-all duration-300"
           :class="toastClass(toast.type)"
           role="alert"
           @click="toastStore.remove(toast.id)"
@@ -32,9 +32,9 @@ const toastStore = useToastStore()
 
 function toastClass(type) {
   return {
-    success: 'bg-white border-black text-black',
-    error: 'bg-red-50 border-red-500 text-red-800',
-    info: 'bg-yellow-50 border-yellow-500 text-yellow-900',
+    success: 'bg-white dark:bg-zinc-900 border-black dark:border-white text-black dark:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]',
+    error: 'bg-red-50 dark:bg-red-950 border-red-500 dark:border-red-700 text-red-800 dark:text-red-200 shadow-[4px_4px_0px_0px_rgba(239,68,68,0.5)] dark:shadow-[4px_4px_0px_0px_rgba(239,68,68,0.5)]',
+    info: 'bg-yellow-50 dark:bg-yellow-950 border-yellow-500 dark:border-yellow-700 text-yellow-900 dark:text-yellow-200 shadow-[4px_4px_0px_0px_rgba(234,179,8,0.5)] dark:shadow-[4px_4px_0px_0px_rgba(234,179,8,0.5)]',
   }[type]
 }
 
