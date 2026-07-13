@@ -1,34 +1,34 @@
 <!-- frontend/src/views/HomePage.vue -->
 <!--
-  Главная страница с каталогом товаров.
-  Отображает список товаров и фильтр по категориям.
+  Main page with product catalog.
+  Displays the list of products and category filter.
 -->
 
 <template>
   <div class="min-h-screen bg-white">
     <div class="max-w-7xl mx-auto px-4 py-8">
-      <!-- Заголовок -->
+      <!-- Header -->
       <div class="mb-8">
         <h1 class="text-4xl font-extrabold text-black mb-2">Product Catalog</h1>
         <p class="text-gray-500">Discover our amazing products</p>
       </div>
 
       <div class="flex gap-8">
-        <!-- Боковая панель с фильтром -->
-        <aside class="w-64 flex-shrink-0">
+        <!-- Sidebar with filter -->
+        <aside class="w-64 flex-shrink-0 sticky top-24 self-start">
           <CategoryFilter />
         </aside>
 
-        <!-- Основное содержимое -->
+        <!-- Main content -->
         <main class="flex-grow">
-          <!-- Информация о фильтрации -->
+          <!-- Filtering info -->
           <div class="mb-6 flex items-center justify-between">
             <p class="text-gray-700">
               <span class="font-bold">{{ productsStore.productsCount }}</span>
               {{ productsStore.productsCount === 1 ? 'product' : 'products' }} found
             </p>
 
-            <!-- Кнопка сброса фильтра -->
+            <!-- Clear filter button -->
             <button
               v-if="productsStore.selectedCategory"
               @click="productsStore.clearCategoryFilter"
@@ -38,7 +38,7 @@
             </button>
           </div>
 
-          <!-- Состояние загрузки -->
+          <!-- Loading state -->
           <div v-if="productsStore.loading" class="text-center py-12">
             <div
               class="inline-block animate-spin rounded-none h-12 w-12 border-b-2 border-black"
@@ -46,24 +46,46 @@
             <p class="mt-4 text-gray-500">Loading products...</p>
           </div>
 
-          <!-- Ошибка -->
+          <!-- Error -->
           <div v-else-if="productsStore.error" class="text-center py-12">
             <p class="text-red-600 font-medium">{{ productsStore.error }}</p>
           </div>
 
-          <!-- Список товаров -->
-          <div
-            v-else-if="productsStore.filteredProducts.length > 0"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            <ProductCard
-              v-for="product in productsStore.filteredProducts"
-              :key="product.id"
-              :product="product"
-            />
+          <!-- Product list -->
+          <div v-else-if="productsStore.filteredProducts.length > 0">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <ProductCard
+                v-for="product in productsStore.filteredProducts"
+                :key="product.id"
+                :product="product"
+              />
+            </div>
+
+            <!-- Pagination elements -->
+            <div v-if="productsStore.totalPages > 1" class="mt-12 flex justify-center items-center gap-4">
+              <button
+                @click="productsStore.setPage(productsStore.currentPage - 1)"
+                :disabled="productsStore.currentPage === 1"
+                class="px-5 py-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer"
+              >
+                Previous
+              </button>
+
+              <span class="text-lg font-bold text-black select-none">
+                Page {{ productsStore.currentPage }} of {{ productsStore.totalPages }}
+              </span>
+
+              <button
+                @click="productsStore.setPage(productsStore.currentPage + 1)"
+                :disabled="productsStore.currentPage === productsStore.totalPages"
+                class="px-5 py-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
           </div>
 
-          <!-- Пустое состояние -->
+          <!-- Empty state -->
           <div v-else class="text-center py-12">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -102,7 +124,7 @@ import CategoryFilter from '@/components/CategoryFilter.vue'
 const productsStore = useProductsStore()
 
 /**
- * Загрузить данные при монтировании компонента
+ * Load data when the component is mounted
  */
 onMounted(async () => {
   await Promise.all([productsStore.fetchProducts(), productsStore.fetchCategories()])
