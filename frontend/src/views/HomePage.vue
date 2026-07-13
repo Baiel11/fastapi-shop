@@ -61,26 +61,52 @@
               />
             </div>
 
-            <!-- Pagination elements -->
-            <div v-if="productsStore.totalPages > 1" class="mt-12 flex justify-center items-center gap-4">
+            <!-- Modern Numbered Pagination -->
+            <div v-if="productsStore.totalPages > 1" class="mt-12 flex justify-center items-center space-x-2">
+              <!-- Previous button -->
               <button
                 @click="productsStore.setPage(productsStore.currentPage - 1)"
                 :disabled="productsStore.currentPage === 1"
-                class="px-5 py-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer"
+                class="p-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer mr-2 flex items-center justify-center"
+                aria-label="Previous page"
               >
-                Previous
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+                </svg>
               </button>
 
-              <span class="text-lg font-bold text-black select-none">
-                Page {{ productsStore.currentPage }} of {{ productsStore.totalPages }}
-              </span>
+              <!-- Page numbers -->
+              <template v-for="(page, idx) in visiblePages" :key="idx">
+                <span
+                  v-if="page === '...'"
+                  class="px-3 py-2 text-gray-500 font-bold select-none"
+                >
+                  ...
+                </span>
+                <button
+                  v-else
+                  @click="productsStore.setPage(page)"
+                  :class="[
+                    'px-4 py-2 border-2 text-sm font-bold rounded-lg transition-colors cursor-pointer select-none',
+                    productsStore.currentPage === page
+                      ? 'bg-black border-black text-white'
+                      : 'border-gray-200 text-black hover:border-black'
+                  ]"
+                >
+                  {{ page }}
+                </button>
+              </template>
 
+              <!-- Next button -->
               <button
                 @click="productsStore.setPage(productsStore.currentPage + 1)"
                 :disabled="productsStore.currentPage === productsStore.totalPages"
-                class="px-5 py-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer"
+                class="p-2.5 border-2 border-black text-black font-bold rounded-lg transition-colors hover:bg-black hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black cursor-pointer ml-2 flex items-center justify-center"
+                aria-label="Next page"
               >
-                Next
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
           </div>
@@ -98,7 +124,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
               />
             </svg>
             <p class="text-gray-500 text-lg font-medium">No products found</p>
@@ -116,12 +142,44 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useProductsStore } from '@/stores/products'
 import ProductCard from '@/components/ProductCard.vue'
 import CategoryFilter from '@/components/CategoryFilter.vue'
 
 const productsStore = useProductsStore()
+
+/**
+ * Calculates page numbers to display in modern numbered pagination.
+ */
+const visiblePages = computed(() => {
+  const current = productsStore.currentPage
+  const total = productsStore.totalPages
+
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1)
+  }
+
+  const pages = []
+  pages.push(1)
+
+  if (current > 3) {
+    pages.push('...')
+  }
+
+  const start = Math.max(2, current - 1)
+  const end = Math.min(total - 1, current + 1)
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+
+  if (current < total - 2) {
+    pages.push('...')
+  }
+
+  pages.push(total)
+  return pages
+})
 
 /**
  * Load data when the component is mounted
