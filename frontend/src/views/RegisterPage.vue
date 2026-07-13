@@ -51,7 +51,7 @@
               required
               autocomplete="new-password"
               class="w-full px-4 py-3 border-2 border-black rounded-xl text-black focus:outline-none focus:bg-yellow-50 focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
-              placeholder="••••••••"
+              placeholder="Enter your password"
             />
           </div>
         </div>
