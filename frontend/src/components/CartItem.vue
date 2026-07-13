@@ -1,7 +1,7 @@
 <!-- frontend/src/components/CartItem.vue -->
 <!--
-  Компонент элемента корзины.
-  Отображает товар в корзине с возможностью изменения количества и удаления.
+  Cart item component.
+  Displays a product in the cart with options to change quantity and remove it.
 -->
 
 <template>
@@ -9,7 +9,7 @@
     class="bg-white border-2 border-gray-100 rounded-none p-6 shadow-sm hover:border-gray-300 transition-colors"
   >
     <div class="flex gap-6">
-      <!-- Изображение товара -->
+      <!-- Product image -->
       <div class="w-24 h-24 flex-shrink-0">
         <img
           :src="item.image_url"
@@ -19,14 +19,14 @@
         />
       </div>
 
-      <!-- Информация о товаре -->
+      <!-- Product info -->
       <div class="flex-grow">
         <h3 class="text-lg font-bold text-black mb-2">
           {{ item.name }}
         </h3>
         <p class="text-gray-600 text-sm mb-3">${{ Number(item.price).toFixed(2) }} each</p>
 
-        <!-- Управление количеством -->
+        <!-- Quantity control -->
         <div class="flex items-center gap-4">
           <div class="flex items-center border-2 border-gray-100 rounded-none" style="color: black">
             <button
@@ -76,7 +76,7 @@
             </button>
           </div>
 
-          <!-- Кнопка удаления -->
+          <!-- Delete button -->
           <button
             @click="handleRemove"
             :disabled="updating"
@@ -100,7 +100,7 @@
         </div>
       </div>
 
-      <!-- Сумма -->
+      <!-- Subtotal -->
       <div class="text-right">
         <p class="text-xl font-bold text-black">${{ Number(item.subtotal).toFixed(2) }}</p>
       </div>
@@ -111,6 +111,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useCartStore } from '@/stores/cart'
+import { formatPrice, PLACEHOLDER_IMAGE } from '@/utils/format'
 
 // Props
 const props = defineProps({
@@ -126,7 +127,7 @@ const updating = ref(false)
 
 // Methods
 /**
- * Увеличить количество товара
+ * Increase product quantity
  */
 async function increaseQuantity() {
   updating.value = true
@@ -135,7 +136,7 @@ async function increaseQuantity() {
 }
 
 /**
- * Уменьшить количество товара
+ * Decrease product quantity
  */
 async function decreaseQuantity() {
   updating.value = true
@@ -148,7 +149,7 @@ async function decreaseQuantity() {
 }
 
 /**
- * Удалить товар из корзины
+ * Remove product from cart
  */
 async function handleRemove() {
   updating.value = true
@@ -157,9 +158,9 @@ async function handleRemove() {
 }
 
 /**
- * Обработка ошибки загрузки изображения
+ * Falls back to a local SVG placeholder if the product image URL fails.
  */
 function handleImageError(event) {
-  event.target.src = 'https://via.placeholder.com/100x100?text=No+Image'
+  event.target.src = PLACEHOLDER_IMAGE
 }
 </script>

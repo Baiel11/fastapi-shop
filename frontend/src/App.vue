@@ -1,18 +1,15 @@
 <!-- frontend/src/App.vue -->
 <!--
-  Корневой компонент приложения.
-  Содержит общую структуру с Header и RouterView.
+  Root application component.
+  Contains general structure with Header and RouterView.
 -->
 
 <template>
   <div id="app" class="min-h-screen bg-gray-50">
-    <!-- Шапка сайта -->
     <Header />
 
-    <!-- Основной контент (роутер) -->
     <RouterView />
 
-    <!-- Футер -->
     <footer class="bg-white border-t-2 border-black mt-16">
       <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="text-center text-gray-600">
@@ -21,6 +18,9 @@
         </div>
       </div>
     </footer>
+
+    <!-- Global toast notification container — renders via Teleport above all content -->
+    <ToastContainer />
   </div>
 </template>
 
@@ -28,20 +28,20 @@
 import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import Header from '@/components/Header.vue'
+import ToastContainer from '@/components/ToastContainer.vue'
 import { useCartStore } from '@/stores/cart'
+import { useAuthStore } from '@/stores/auth'
 
 const cartStore = useCartStore()
+const authStore = useAuthStore()
 
-/**
- * Инициализация приложения
- */
-onMounted(() => {
-  // Загрузить корзину из localStorage при запуске
+onMounted(async () => {
   cartStore.initCart()
+  await authStore.initAuth()
 })
 </script>
 
 <style scoped>
-/* Убираем все переопределения стилей для #app */
-/* Tailwind классы полностью контролируют layout */
+/* Remove all style overrides for #app */
+/* Tailwind classes fully control layout */
 </style>

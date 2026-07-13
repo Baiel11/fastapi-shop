@@ -1,16 +1,16 @@
 <!-- frontend/src/components/CategoryFilter.vue -->
 <!--
-  Компонент фильтрации товаров по категориям.
-  Отображает список категорий с возможностью выбора для фильтрации.
+  Category filter component.
+  Displays a list of categories with the option to filter by them.
 -->
 
 <template>
   <div class="bg-white border-2 border-gray-200 rounded-lg p-6">
     <h2 class="text-2xl font-bold text-black mb-6">Categories</h2>
 
-    <!-- Список категорий -->
+    <!-- Category list -->
     <ul class="space-y-2">
-      <!-- Все категории -->
+      <!-- All categories -->
       <li>
         <button
           @click="selectCategory(null)"
@@ -28,7 +28,7 @@
         </button>
       </li>
 
-      <!-- Отдельные категории -->
+      <!-- Individual categories -->
       <li v-for="category in productsStore.categories" :key="category.id">
         <button
           @click="selectCategory(category.id)"
@@ -56,14 +56,14 @@ import { useProductsStore } from '@/stores/products'
 const productsStore = useProductsStore()
 
 /**
- * Общее количество товаров (без фильтра)
+ * Total products count (without filter)
  */
 const totalProductsCount = computed(() => {
-  return productsStore.products.length
+  return productsStore.productsCount
 })
 
 /**
- * Выбрать категорию для фильтрации
+ * Select a category for filtering
  */
 function selectCategory(categoryId) {
   if (categoryId === null) {
