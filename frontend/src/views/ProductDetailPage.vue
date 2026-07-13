@@ -1,13 +1,13 @@
 <!-- frontend/src/views/ProductDetailPage.vue -->
 <!--
-  Детальная страница товара.
-  Отображает полную информацию о товаре с возможностью добавления в корзину.
+  Product detail page.
+  Displays full product information with add-to-cart option.
 -->
 
 <template>
   <div class="min-h-screen bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <!-- Кнопка "Назад" -->
+      <!-- "Back" button -->
       <button
         @click="router.push('/')"
         class="flex items-center text-gray-600 hover:text-black transition-colors mb-8 font-medium text-lg"
@@ -29,13 +29,13 @@
         Back to catalog
       </button>
 
-      <!-- Состояние загрузки -->
+      <!-- Loading state -->
       <div v-if="loading" class="text-center py-16">
         <div class="inline-block animate-spin rounded-full h-14 w-14 border-b-4 border-black"></div>
         <p class="mt-4 text-lg text-gray-500">Loading product...</p>
       </div>
 
-      <!-- Ошибка -->
+      <!-- Error -->
       <div v-else-if="error" class="text-center py-16">
         <p class="text-red-600 text-lg font-medium">{{ error }}</p>
         <button
@@ -46,40 +46,40 @@
         </button>
       </div>
 
-      <!-- Детальная информация о товаре -->
+      <!-- Detailed product info -->
       <div
         v-else-if="product"
         class="bg-white border-2 border-gray-100 rounded-none shadow-sm overflow-hidden"
       >
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
-          <!-- Изображение -->
+          <!-- Image -->
           <div class="aspect-square overflow-hidden rounded-none bg-gray-50">
             <img
-              :src="product.image_url"
+              :src="product.image_url || PLACEHOLDER_IMAGE"
               :alt="product.name"
               class="w-full h-full object-cover"
               @error="handleImageError"
             />
           </div>
 
-          <!-- Информация -->
+          <!-- Information -->
           <div class="flex flex-col">
-            <!-- Категория -->
+            <!-- Category -->
             <div class="text-sm text-gray-500 uppercase tracking-wider mb-3 font-medium">
-              {{ product.category.name }}
+              {{ product.category?.name }}
             </div>
 
-            <!-- Название -->
+            <!-- Title -->
             <h1 class="text-3xl sm:text-4xl font-extrabold text-black mb-4">
               {{ product.name }}
             </h1>
 
-            <!-- Цена -->
+            <!-- Price -->
             <div class="text-2xl sm:text-3xl font-bold text-black mb-6">
-              ${{ product.price.toFixed(2) }}
+              ${{ formatPrice(product.price) }}
             </div>
 
-            <!-- Описание -->
+            <!-- Description -->
             <div class="mb-8">
               <h2 class="text-xl font-bold text-black mb-3">Description</h2>
               <p class="text-gray-600 leading-relaxed">
@@ -87,7 +87,7 @@
               </p>
             </div>
 
-            <!-- Кнопка добавления в корзину -->
+            <!-- Add to cart button -->
             <div class="mt-auto">
               <button
                 @click="handleAddToCart"
@@ -96,19 +96,9 @@
               >
                 {{ adding ? 'Adding to cart...' : 'Add to Cart' }}
               </button>
-
-              <!-- Уведомление об успешном добавлении -->
-              <transition name="fade">
-                <div
-                  v-if="showNotification"
-                  class="mt-4 bg-black text-white px-4 py-3 rounded-none text-center font-medium"
-                >
-                  ✓ Product added to cart!
-                </div>
-              </transition>
             </div>
 
-            <!-- Дополнительная информация -->
+            <!-- Additional info -->
             <div class="mt-8 pt-6 border-t-2 border-gray-100">
               <p class="text-sm text-gray-500">Product ID: {{ product.id }}</p>
               <p class="text-sm text-gray-500">Added: {{ formatDate(product.created_at) }}</p>
@@ -125,21 +115,25 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProductsStore } from '@/stores/products'
 import { useCartStore } from '@/stores/cart'
+import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toast'
+import { formatPrice, formatDate, PLACEHOLDER_IMAGE } from '@/utils/format'
 
 const route = useRoute()
 const router = useRouter()
 const productsStore = useProductsStore()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
+const toastStore = useToastStore()
 
 // State
 const product = ref(null)
 const loading = ref(false)
 const error = ref(null)
 const adding = ref(false)
-const showNotification = ref(false)
 
 /**
- * Загрузить данные товара
+ * Loads product data by ID from the route param.
  */
 async function loadProduct() {
   loading.value = true
@@ -157,42 +151,36 @@ async function loadProduct() {
 }
 
 /**
- * Добавить товар в корзину
+ * Adds the product to cart.
+ * Redirects unauthenticated users to login, preserving the current page
+ * as the post-login redirect destination.
  */
 async function handleAddToCart() {
+  if (!authStore.isAuthenticated) {
+    toastStore.info('Please sign in to add products to your cart.')
+    router.push({ name: 'login', query: { next: route.fullPath } })
+    return
+  }
+
   adding.value = true
   const success = await cartStore.addToCart(product.value.id, 1)
 
   if (success) {
-    showNotification.value = true
-    setTimeout(() => {
-      showNotification.value = false
-    }, 3000)
+    toastStore.success(`"${product.value.name}" added to cart!`)
+  } else {
+    toastStore.error('Could not add product to cart. Please try again.')
   }
 
   adding.value = false
 }
 
 /**
- * Форматировать дату
- */
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
-/**
- * Обработка ошибки загрузки изображения
+ * Falls back to a local SVG placeholder if the product image URL fails.
  */
 function handleImageError(event) {
-  event.target.src = 'https://via.placeholder.com/600x600?text=No+Image'
+  event.target.src = PLACEHOLDER_IMAGE
 }
 
-// Загрузить товар при монтировании
 onMounted(() => {
   loadProduct()
 })
