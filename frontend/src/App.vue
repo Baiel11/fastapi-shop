@@ -29,14 +29,11 @@ import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import Header from '@/components/Header.vue'
 import ToastContainer from '@/components/ToastContainer.vue'
-import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
 
-const cartStore = useCartStore()
 const authStore = useAuthStore()
 
 onMounted(async () => {
-  cartStore.initCart()
   await authStore.initAuth()
 })
 </script>
