@@ -2,9 +2,9 @@ from fastapi import Depends, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from ..core.database import get_db
+from .database import get_db
 from ..services.auth_service import AuthService
-from ..core.exceptions import ForbiddenException
+from .exceptions import ForbiddenException
 from ..schemas.pagination import PaginationParams
 
 bearer_scheme = HTTPBearer()

@@ -4,8 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from .core.config import settings
 from .routes import products_router, categories_router, cart_router, auth_router
 
-from .core.exceptions import AppException
-from .core.error_handlers import (
+from .core.exceptions import (
+    AppException,
     app_exception_handler,
     http_exception_handler,
     validation_exception_handler,

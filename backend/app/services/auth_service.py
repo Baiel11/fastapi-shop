@@ -3,8 +3,13 @@ from jose import JWTError
 
 from ..repositories.user_repository import UserRepository
 from ..schemas.auth import UserRegister, UserLogin, TokenResponse, UserResponse
-from ..core.passwords import hash_password, verify_password
-from ..core.jwt import create_access_token, create_refresh_token, decode_token
+from ..core.security import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    create_refresh_token,
+    decode_token
+)
 from ..core.exceptions import ConflictException, UnauthorizedException, ForbiddenException
 
 class AuthService:
