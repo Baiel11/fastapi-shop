@@ -1,70 +1,44 @@
-version: '3.8'
-
 services:
+  # ── Database Service (Postgres) ────────────────────────
+  db:
+    image: postgres:17-alpine
+    container_name: fashop_db
+    environment:
+      POSTGRES_USER: ${DB_USER:-fashop_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-fashop_secure_password}
+      POSTGRES_DB: ${DB_NAME:-fashop_db}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - fashop_network
+
+  # ── Backend Service (FastAPI) ──────────────────────────
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
     container_name: fashop_backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./backend:/app
-      - backend_static:/app/static
+    ports:
+      - "8000:8000"
     environment:
       - APP_NAME=${APP_NAME:-FastAPI Shop}
-      - DEBUG=${DEBUG:-False}
-      - DATABASE_URL=sqlite:///./shop.db
-      - CORS_ORIGINS=https://${DOMAIN},https://www.${DOMAIN}
-    expose:
-      - "8000"
-    restart: unless-stopped
-    networks:
-      - fashop_network
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - VITE_API_BASE_URL=https://${DOMAIN}/api
-    container_name: fashop_frontend
+      - DEBUG=True
+      - CORS_ORIGINS=["http://localhost:5173","http://127.0.0.1:5173"]
+      - DATABASE_URL=postgresql://${DB_USER:-fashop_admin}:${DB_PASSWORD:-fashop_secure_password}@db:5432/${DB_NAME:-fashop_db}
     depends_on:
-      - backend
-    expose:
-      - "80"
-    restart: unless-stopped
-    networks:
-      - fashop_network
-
-  nginx:
-    image: nginx:alpine
-    container_name: fashop_nginx
-    volumes:
-      - ./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - backend_static:/app/backend/static:ro
-      - ./certbot/www:/var/www/certbot:ro
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - DOMAIN=${DOMAIN}
-    command: /bin/sh -c "envsubst '$${DOMAIN}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
-    depends_on:
-      - backend
-      - frontend
-    restart: unless-stopped
-    networks:
-      - fashop_network
-
-  certbot:
-    image: certbot/certbot
-    container_name: fashop_certbot
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    restart: unless-stopped
+      db:
+        condition: service_healthy
     networks:
       - fashop_network
 
@@ -73,4 +47,4 @@ networks:
     driver: bridge
 
 volumes:
-  backend_static:
+  pgdata:

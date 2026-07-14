@@ -34,7 +34,6 @@ def run_migrations_online() -> None:
     connectable = create_engine(
         settings.database_url,
         poolclass=pool.NullPool,
-        connect_args={"check_same_thread": False},
     )
 
     with connectable.connect() as connection:
