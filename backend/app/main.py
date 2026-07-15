@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from .middleware.security import SecurityHeadersMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from .core.database.session import engine
@@ -42,6 +43,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.mount('/static', StaticFiles(directory=settings.static_dir), name='static')
 

@@ -16,7 +16,7 @@ class ProductService:
         items = [ProductResponse.model_validate(p) for p in products]
         pages = (total + params.size - 1) // params.size if total > 0 else 1
         return PaginatedResponse(
-            total=total, total=total, page=params.page, size=params.size, pages=pages
+            items=items, total=total, page=params.page, size=params.size, pages=pages
         )
     
     async def get_product_by_id(self, product_id: int) -> ProductResponse:

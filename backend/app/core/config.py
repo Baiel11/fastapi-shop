@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     static_dir: str = "static"
     images_dir: str = "static/images"
 
-    secret_key: str = "change-me"
+    secret_key: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
