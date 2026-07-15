@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.database import get_db
 from ..core.dependencies import get_current_user
@@ -11,16 +11,16 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("3/minute")
-def register(request: Request, data: UserRegister, db: Session = Depends(get_db)):
+async def register(request: Request, data: UserRegister, db: AsyncSession = Depends(get_db)):
     service = AuthService(db)
-    return service.register(data)
+    return await service.register(data)
 
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("5/minute")
-def login(request: Request, data: UserLogin, db: Session = Depends(get_db)):
+async def login(request: Request, data: UserLogin, db: AsyncSession = Depends(get_db)):
     service = AuthService(db)
-    return service.login(data)
+    return await service.login(data)
 
 @router.get("/me", response_model=UserResponse)
-def get_me(current_user=Depends(get_current_user)):
+async def get_me(current_user=Depends(get_current_user)):
     return current_user

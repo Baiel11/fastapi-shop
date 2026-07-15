@@ -1,22 +1,21 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from ..repositories.category_repository import CategoryRepository
 from ..schemas.category import CategoryCreate, CategoryResponse
 from ..core.exceptions import NotFoundException
 class CategoryService:
-    def __init__(self, db: Session):
-        self.category_repository = CategoryRepository(db)
+    def __init__(self, db: AsyncSession):
+        self.category_repo = CategoryRepository(db)
     
-    def get_all_categories(self) -> list[CategoryResponse]:
-        categories = self.category_repository.get_all()
+    async def get_all_categories(self) -> list[CategoryResponse]:
+        categories = await self.category_repo.get_all()
         return [CategoryResponse.model_validate(cat) for cat in categories]
     
-    def get_category_by_id(self, category_id: int) -> CategoryResponse:
-        category = self.category_repository.get_by_id(category_id)
+    async def get_category_by_id(self, category_id: int) -> CategoryResponse:
+        category = self.category_repo.get_by_id(category_id)
         if not category:
             raise NotFoundException(detail=f'Category with id {category_id} not found')
         return CategoryResponse.model_validate(category)
     
-    def create_category(self, category_data: CategoryCreate) -> CategoryResponse:
-        category = self.category_repository.create(category_data)
+    async def create_category(self, category_data: CategoryCreate) -> CategoryResponse:
+        category = self.category_repo.create(category_data)
         return CategoryResponse.model_validate(category)
-    

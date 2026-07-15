@@ -1,31 +1,29 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError
 
+from ..models.user import User  # ← needed for return type annotation
 from ..repositories.user_repository import UserRepository
 from ..schemas.auth import UserRegister, UserLogin, TokenResponse, UserResponse
 from ..core.security import (
-    hash_password,
-    verify_password,
-    create_access_token,
-    create_refresh_token,
-    decode_token
+    hash_password, verify_password,
+    create_access_token, create_refresh_token, decode_token
 )
 from ..core.exceptions import ConflictException, UnauthorizedException, ForbiddenException
 
 class AuthService:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.user_repo = UserRepository(db)
 
-    def register(self, data: UserRegister) -> UserResponse:
-        if self.user_repo.get_by_email(data.email):
+    async def register(self, data: UserRegister) -> UserResponse:
+        if await self.user_repo.get_by_email(data.email):
             raise ConflictException(detail="Email already registered")
         
-        if self.user_repo.get_by_username(data.username):
+        if await self.user_repo.get_by_username(data.username):
             raise ConflictException(detail="Username already taken")
         
         # Hash happens here
         hashed = hash_password(data.password)
-        user = self.user_repo.create(
+        user = await self.user_repo.create(
             email=data.email,
             username=data.username,
             hashed_password=hashed
@@ -33,8 +31,8 @@ class AuthService:
 
         return UserResponse.model_validate(user)
     
-    def login(self, data: UserLogin) -> TokenResponse:
-        user = self.user_repo.get_by_email(data.email)
+    async def login(self, data: UserLogin) -> TokenResponse:
+        user = await self.user_repo.get_by_email(data.email)
 
         if not user or not verify_password(data.password, user.hashed_password):
             raise UnauthorizedException(detail="Invalid email or password")
@@ -48,7 +46,7 @@ class AuthService:
             refresh_token=create_refresh_token(payload)
         )
     
-    def get_user_by_token(self, token: str) -> UserResponse:
+    async def get_user_by_token(self, token: str) -> User:
         try:
             payload = decode_token(token)
             user_id: str = payload.get("sub")
@@ -59,8 +57,8 @@ class AuthService:
         except JWTError:
             raise UnauthorizedException(detail="Invalid or expired token")
         
-        user = self.user_repo.get_by_id(int(user_id))
+        user = await self.user_repo.get_by_id(int(user_id))
         if not user:
             raise UnauthorizedException(detail="User not found")
         
-        return UserResponse.model_validate(user)
+        return user
