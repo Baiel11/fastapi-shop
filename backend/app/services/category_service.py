@@ -11,11 +11,11 @@ class CategoryService:
         return [CategoryResponse.model_validate(cat) for cat in categories]
     
     async def get_category_by_id(self, category_id: int) -> CategoryResponse:
-        category = self.category_repo.get_by_id(category_id)
+        category = await self.category_repo.get_by_id(category_id)
         if not category:
             raise NotFoundException(detail=f'Category with id {category_id} not found')
         return CategoryResponse.model_validate(category)
     
     async def create_category(self, category_data: CategoryCreate) -> CategoryResponse:
-        category = self.category_repo.create(category_data)
+        category = await self.category_repo.create(category_data)
         return CategoryResponse.model_validate(category)
