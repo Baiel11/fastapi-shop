@@ -35,7 +35,7 @@ services:
       - APP_NAME=${APP_NAME:-FastAPI Shop}
       - DEBUG=True
       - CORS_ORIGINS=["http://localhost:5173","http://127.0.0.1:5173"]
-      - DATABASE_URL=postgresql://${DB_USER:-fashop_admin}:${DB_PASSWORD:-fashop_secure_password}@db:5432/${DB_NAME:-fashop_db}
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER:-fashop_admin}:${DB_PASSWORD:-fashop_secure_password}@db:5432/${DB_NAME:-fashop_db}
     depends_on:
       db:
         condition: service_healthy
