@@ -5,7 +5,13 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from .core.database.session import engine
 from .core.config import settings
-from .routes import products_router, categories_router, cart_router, auth_router
+from .routes.customer import products_router, categories_router, cart_router, auth_router
+from .routes.admin import (
+    dashboard_router,
+    admin_products_router,
+    admin_categories_router,
+    admin_users_router,
+)
 
 from .core.exceptions import (
     AppException,
@@ -53,10 +59,17 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Customer routes
+app.include_router(auth_router)
 app.include_router(cart_router)
 app.include_router(categories_router)
 app.include_router(products_router)
-app.include_router(auth_router)
+
+# Admin routes
+app.include_router(dashboard_router)
+app.include_router(admin_products_router)
+app.include_router(admin_categories_router)
+app.include_router(admin_users_router)
 
 @app.get('/')
 def root():
