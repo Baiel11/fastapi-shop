@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from ..models.category import Category
-from ..schemas.category import CategoryCreate
+from ..schemas.customer.category import CategoryCreate
 
 class CategoryRepository:
     def __init__(self, db: AsyncSession):
@@ -29,3 +29,20 @@ class CategoryRepository:
         await self.db.commit()
         await self.db.refresh(db_category)
         return db_category
+
+    async def update(self, category_id: int, data: CategoryCreate) -> Optional[Category]:
+        category = await self.get_by_id(category_id)
+        if category:
+            for key, value in data.model_dump().items():
+                setattr(category, key, value)
+            await self.db.commit()
+            await self.db.refresh(category)
+        return category
+
+    async def delete(self, category_id: int) -> bool:
+        category = await self.get_by_id(category_id)
+        if category:
+            await self.db.delete(category)
+            await self.db.commit()
+            return True
+        return False
