@@ -56,6 +56,37 @@ const router = createRouter({
       },
     },
     {
+      path: '/admin',
+      component: () => import('@/components/admin/AdminLayout.vue'),
+      meta: { requiresAdmin: true },
+      children: [
+        {
+          path: '',
+          name: 'admin-dashboard',
+          component: () => import('@/views/admin/Dashboard.vue'),
+          meta: { title: 'Admin - Dashboard' },
+        },
+        {
+          path: 'products',
+          name: 'admin-products',
+          component: () => import('@/views/admin/Products.vue'),
+          meta: { title: 'Admin - Products' },
+        },
+        {
+          path: 'categories',
+          name: 'admin-categories',
+          component: () => import('@/views/admin/Categories.vue'),
+          meta: { title: 'Admin - Categories' },
+        },
+        {
+          path: 'users',
+          name: 'admin-users',
+          component: () => import('@/views/admin/Users.vue'),
+          meta: { title: 'Admin - Users' },
+        },
+      ],
+    },
+    {
       // Catch all unmatched routes → 404 page
       path: '/:pathMatch(.*)*',
       name: 'not-found',
@@ -76,6 +107,16 @@ router.beforeEach((to, from, next) => {
   // If the user is already logged in, prevent accessing login/register pages
   if (to.meta.guestOnly && authStore.isAuthenticated) {
     return next({ name: 'home' })
+  }
+
+  // If the route requires admin status, check role
+  if (to.meta.requiresAdmin) {
+    if (!authStore.isAuthenticated) {
+      return next({ name: 'login', query: { next: to.fullPath } })
+    }
+    if (!authStore.isAdmin) {
+      return next({ name: 'not-found' })
+    }
   }
 
   // If the route requires auth and the user is not logged in,
