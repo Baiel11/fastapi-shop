@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict
-from ..core.database import get_db
-from ..core.dependencies import get_current_user
-from ..services.cart_service import CartService
-from ..schemas.cart import(
+from ...core.database import get_db
+from ...core.dependencies import get_current_user
+from ...services.customer.cart_service import CartService
+from ...schemas.customer.cart import(
     CartResponse, AddToCartRequest, UpdateCartRequest
 )
 

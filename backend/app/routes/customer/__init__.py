@@ -7,5 +7,5 @@ __all__ = [
     "products_router",
     "categories_router",
     "cart_router",
-    "auth_router"
-    ]
+    "auth_router",
+]

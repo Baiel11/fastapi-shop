@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..core.database import get_db
-from ..core.dependencies import get_pagination_params
-from ..services.product_service import ProductService
-from ..schemas.product import ProductResponse
-from ..schemas.pagination import PaginationParams, PaginatedResponse
+from ...core.database import get_db
+from ...core.dependencies import get_pagination_params
+from ...services.customer.product_service import ProductService
+from ...schemas.customer.product import ProductResponse
+from ...schemas.customer.pagination import PaginationParams, PaginatedResponse
 
 router = APIRouter(
     prefix="/api/products",
