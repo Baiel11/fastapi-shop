@@ -3,9 +3,9 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .database import get_db
-from ..services.auth_service import AuthService
+from ..services.customer.auth_service import AuthService
 from .exceptions import ForbiddenException
-from ..schemas.pagination import PaginationParams
+from ..schemas.customer.pagination import PaginationParams
 
 bearer_scheme = HTTPBearer()
 
