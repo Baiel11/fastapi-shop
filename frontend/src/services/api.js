@@ -110,4 +110,43 @@ export const cartAPI = {
   },
 }
 
+/**
+ * API methods for admin management
+ */
+export const adminAPI = {
+  getStats() {
+    return apiClient.get('/admin/dashboard')
+  },
+  getProducts(page = 1, size = 20) {
+    return apiClient.get('/admin/products', { params: { page, size } })
+  },
+  createProduct(productData) {
+    return apiClient.post('/admin/products', productData)
+  },
+  updateProduct(productId, productData) {
+    return apiClient.put(`/admin/products/${productId}`, productData)
+  },
+  deleteProduct(productId) {
+    return apiClient.delete(`/admin/products/${productId}`)
+  },
+  createCategory(categoryData) {
+    return apiClient.post('/admin/categories', categoryData)
+  },
+  updateCategory(categoryId, categoryData) {
+    return apiClient.put(`/admin/categories/${categoryId}`, categoryData)
+  },
+  deleteCategory(categoryId) {
+    return apiClient.delete(`/admin/categories/${categoryId}`)
+  },
+  getUsers(page = 1, size = 20) {
+    return apiClient.get('/admin/users', { params: { page, size } })
+  },
+  updateUserStatus(userId, isActive) {
+    return apiClient.patch(`/admin/users/${userId}/status`, { is_active: isActive })
+  },
+  updateUserRole(userId, isAdmin) {
+    return apiClient.patch(`/admin/users/${userId}/role`, { is_admin: isAdmin })
+  }
+}
+
 export default apiClient
