@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from typing import Optional
 from ..models.product import Product
-from ..schemas.product import ProductCreate
+from ..schemas.customer.product import ProductCreate
 
 class ProductRepository:
     def __init__(self, db: AsyncSession):
@@ -67,3 +67,21 @@ class ProductRepository:
         stmt = select(func.count(Product.id)).where(Product.category_id == category_id)
         result = await self.db.execute(stmt)
         return result.scalar() or 0
+    
+    async def update(self, product_id: int, data) -> Optional[Product]:
+        product = await self.get_by_id(product_id)
+        if product:
+            for key, value in data.model_dump().items():
+                setattr(product, key, value)
+            await self.db.commit()
+            await self.db.refresh(product)
+        return product
+
+    async def soft_delete(self, product_id: int) -> bool:
+        """Sets is_active=False"""
+        product = await self.get_by_id(product_id)
+        if product:
+            product.is_active = False
+            await self.db.commit()
+            return True
+        return False
