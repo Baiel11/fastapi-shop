@@ -1,14 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError
 
-from ..models.user import User  # ← needed for return type annotation
-from ..repositories.user_repository import UserRepository
-from ..schemas.auth import UserRegister, UserLogin, TokenResponse, UserResponse
-from ..core.security import (
+from ...models.user import User  # ← needed for return type annotation
+from ...repositories.user_repository import UserRepository
+from ...schemas.customer.auth import UserRegister, UserLogin, TokenResponse, UserResponse
+from ...core.security import (
     hash_password, verify_password,
     create_access_token, create_refresh_token, decode_token
 )
-from ..core.exceptions import ConflictException, UnauthorizedException, ForbiddenException
+from ...core.exceptions import ConflictException, UnauthorizedException, ForbiddenException
 
 class AuthService:
     def __init__(self, db: AsyncSession):

@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..repositories.product_repository import ProductRepository
-from ..repositories.category_repository import CategoryRepository
-from ..schemas.product import ProductResponse, ProductCreate
-from ..schemas.pagination import PaginatedResponse, PaginationParams
-from ..core.exceptions import NotFoundException, BadRequestException
+from ...repositories.product_repository import ProductRepository
+from ...repositories.category_repository import CategoryRepository
+from ...schemas.customer.product import ProductResponse, ProductCreate
+from ...schemas.customer.pagination import PaginatedResponse, PaginationParams
+from ...core.exceptions import NotFoundException, BadRequestException
 
 class ProductService:
     def __init__(self, db: AsyncSession):
@@ -47,3 +47,17 @@ class ProductService:
             raise BadRequestException(detail=f'Category with id {product_data.category_id} does not exist')
         product = await self.product_repo.create(product_data)
         return ProductResponse.model_validate(product)
+
+    async def update_product(self, product_id: int, product_data: ProductCreate) -> ProductResponse:
+        category = await self.category_repo.get_by_id(product_data.category_id)
+        if not category:
+            raise BadRequestException(detail=f'Category with id {product_data.category_id} does not exist')
+        product = await self.product_repo.update(product_id, product_data)
+        if not product:
+            raise NotFoundException(detail=f'Product with id {product_id} not found')
+        return ProductResponse.model_validate(product)
+
+    async def delete_product(self, product_id: int) -> None:
+        deleted = await self.product_repo.soft_delete(product_id)
+        if not deleted:
+            raise NotFoundException(detail=f'Product with id {product_id} not found')

@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..repositories.cart_repository import CartRepository
-from ..repositories.product_repository import ProductRepository
-from ..schemas.cart import CartItem as SchemaCartItem, CartResponse
-from ..core.exceptions import NotFoundException
+from ...repositories.cart_repository import CartRepository
+from ...repositories.product_repository import ProductRepository
+from ...schemas.customer.cart import CartItem as SchemaCartItem, CartResponse
+from ...core.exceptions import NotFoundException
 class CartService:
     def __init__(self, db: AsyncSession):
         self.cart_repo = CartRepository(db)
