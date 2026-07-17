@@ -1,7 +1,8 @@
 from typing import Optional
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.user import User
+
 class UserRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -31,3 +32,12 @@ class UserRepository:
         await self.db.commit()
         await self.db.refresh(user)
         return user
+    
+    async def count_all(self) -> int:
+        result = await self.db.execute(select(func.count(User.id)))
+        return result.scalar() or 0
+
+    async def get_all(self, offset: int, limit: int) -> list[User]:
+        stmt = select(User).order_by(User.created_at.desc()).offset(offset).limit(limit)
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
