@@ -1,6 +1,10 @@
+import asyncio
 import random
+
 from faker import Faker
-from app.core.database import SessionLocal
+from sqlalchemy import select
+
+from app.core.database import AsyncSessionLocal
 from app.models.category import Category
 from app.models.product import Product
 
@@ -139,12 +143,12 @@ CATEGORY_CONFIG = {
 }
 
 
-def create_categories(db: SessionLocal) -> dict[str, Category]:
+async def create_categories(db: AsyncSessionLocal) -> dict[str, Category]:
     """
     Create product categories.
 
     Args:
-        db: SQLAlchemy session
+        db: SQLAlchemy async session
 
     Returns:
         dict: Dictionary of created categories {slug: Category}
@@ -162,16 +166,16 @@ def create_categories(db: SessionLocal) -> dict[str, Category]:
         db.add(category)
         categories[cat_data["slug"]] = category
 
-    db.commit()
+    await db.commit()
 
     # Refresh all objects after commit so their IDs are populated
     for category in categories.values():
-        db.refresh(category)
+        await db.refresh(category)
 
     return categories
 
 
-def create_products(db: SessionLocal, categories: dict[str, Category]) -> None:
+async def create_products(db: AsyncSessionLocal, categories: dict[str, Category]) -> None:
     """
     Generate 100 realistic products using Faker + curated name lists.
 
@@ -210,42 +214,41 @@ def create_products(db: SessionLocal, categories: dict[str, Category]) -> None:
             db.add(product)
             total += 1
 
-    db.commit()
+    await db.commit()
     return total
 
 
-def seed_database() -> None:
+async def seed_database() -> None:
     """
     Main entry point for populating the database.
     Skips seeding if data already exists to prevent duplicates.
     """
     print("Starting database seeding...")
 
-    db = SessionLocal()
+    async with AsyncSessionLocal() as db:
 
-    try:
-        existing = db.query(Category).count()
-        if existing > 0:
-            print(f"Database already has {existing} categories. Skipping seed.")
-            return
+        try:
+            result = await db.execute(select(Category).limit(1))
+            existing = result.scalar_one_or_none()
+            if existing is not None:
+                print("Database already has categories. Skipping seed.")
+                return
 
-        print("Creating categories...")
-        categories = create_categories(db)
-        print(f"  ✓ {len(categories)} categories created")
+            print("Creating categories...")
+            categories = await create_categories(db)
+            print(f"  ✓ {len(categories)} categories created")
 
-        print("Creating products...")
-        total = create_products(db, categories)
-        print(f"  ✓ {total} products created")
+            print("Creating products...")
+            total = await create_products(db, categories)
+            print(f"  ✓ {total} products created")
 
-        print("\nDatabase seeding completed successfully!")
+            print("\nDatabase seeding completed successfully!")
 
-    except Exception as e:
-        print(f"Error during seeding: {e}")
-        db.rollback()
-        raise
-    finally:
-        db.close()
+        except Exception as e:
+            print(f"Error during seeding: {e}")
+            await db.rollback()
+            raise
 
 
 if __name__ == "__main__":
-    seed_database()
+    asyncio.run(seed_database())
