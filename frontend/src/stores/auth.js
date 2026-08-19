@@ -9,7 +9,6 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref(null)
 
   const isAuthenticated = computed(() => !!token.value)
-  const isAdmin = computed(() => user.value?.is_admin || false)
 
   async function initAuth() {
     if (token.value && !user.value) {
@@ -76,7 +75,6 @@ export const useAuthStore = defineStore('auth', () => {
     loading,
     error,
     isAuthenticated,
-    isAdmin,
     initAuth,
     login,
     register,
