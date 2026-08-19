@@ -35,7 +35,7 @@ class CartService:
         return CartResponse(items=cart_items, total=total_price, items_count=total_items)
     
     async def add_to_cart(self, user_id: int, product_id: int, quantity: int) -> CartResponse:
-        product = self.product_repo.get_by_id(product_id)
+        product = await self.product_repo.get_by_id(product_id)
         if not product:
             raise NotFoundException(detail="Product with id {product_id} not found")
         

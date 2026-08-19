@@ -5,6 +5,7 @@ from ...repositories.user_repository import UserRepository
 from ...repositories.category_repository import CategoryRepository
 from ...models.product import Product
 from ...models.user import User
+from ...models.category import Category
 from ...schemas.admin.dashboard import DashboardStats
 
 
@@ -30,7 +31,6 @@ class DashboardService:
         )
         active_products = active_products_result.scalar() or 0
 
-        from ...models.category import Category
         cat_result = await self.db.execute(select(func.count(Category.id)))
         total_categories = cat_result.scalar() or 0
 
