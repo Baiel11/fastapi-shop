@@ -57,11 +57,17 @@ class AuthService:
 
             if user_id is None or token_type != "access":
                 raise UnauthorizedException(detail="Invalid token")
-        except JWTError:
+            
+            user_id = int(user_id)
+
+        except (JWTError, ValueError):
             raise UnauthorizedException(detail="Invalid or expired token")
         
-        user = await self.user_repo.get_by_id(int(user_id))
+        user = await self.user_repo.get_by_id(user_id)
         if not user:
             raise UnauthorizedException(detail="User not found")
+        
+        if not user.is_active:
+            raise UnauthorizedException(detail="User is blocked")
         
         return user
