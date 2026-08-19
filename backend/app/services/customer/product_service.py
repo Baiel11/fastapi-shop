@@ -5,10 +5,12 @@ from ...schemas.customer.product import ProductResponse, ProductCreate
 from ...schemas.customer.pagination import PaginatedResponse, PaginationParams
 from ...core.exceptions import NotFoundException, BadRequestException
 
+
 class ProductService:
     def __init__(self, db: AsyncSession):
         self.product_repo = ProductRepository(db)
         self.category_repo = CategoryRepository(db)
+
 
     async def get_all_products(self, params: PaginationParams) -> PaginatedResponse[ProductResponse]:
         total = await self.product_repo.count_all()
@@ -18,12 +20,14 @@ class ProductService:
         return PaginatedResponse(
             items=items, total=total, page=params.page, size=params.size, pages=pages
         )
+
     
     async def get_product_by_id(self, product_id: int) -> ProductResponse:
         product = await self.product_repo.get_by_id(product_id)
         if not product:
             raise NotFoundException(detail=f'Product with id {product_id} not found')
         return ProductResponse.model_validate(product)
+
     
     async def get_products_by_category(self, category_id: int, params: PaginationParams) -> PaginatedResponse[ProductResponse]:
         category = await self.category_repo.get_by_id(category_id)
@@ -40,6 +44,7 @@ class ProductService:
         return PaginatedResponse[ProductResponse](
             items=items, total=total, page=params.page, size=params.size, pages=pages
         )
+
     
     async def create_product(self, product_data: ProductCreate) -> ProductResponse:
         category = await self.category_repo.get_by_id(product_data.category_id)
@@ -47,6 +52,7 @@ class ProductService:
             raise BadRequestException(detail=f'Category with id {product_data.category_id} does not exist')
         product = await self.product_repo.create(product_data)
         return ProductResponse.model_validate(product)
+
 
     async def update_product(self, product_id: int, product_data: ProductCreate) -> ProductResponse:
         category = await self.category_repo.get_by_id(product_data.category_id)
@@ -56,6 +62,7 @@ class ProductService:
         if not product:
             raise NotFoundException(detail=f'Product with id {product_id} not found')
         return ProductResponse.model_validate(product)
+
 
     async def delete_product(self, product_id: int) -> None:
         deleted = await self.product_repo.soft_delete(product_id)

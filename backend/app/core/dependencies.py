@@ -7,7 +7,9 @@ from ..services.customer.auth_service import AuthService
 from .exceptions import ForbiddenException
 from ..schemas.customer.pagination import PaginationParams
 
+
 bearer_scheme = HTTPBearer()
+
 
 async def get_current_user(
         credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -17,10 +19,12 @@ async def get_current_user(
     service = AuthService(db)
     return await service.get_user_by_token(token)
 
+
 async def require_admin(current_user=Depends(get_current_user)):
     if not current_user.is_admin:
         raise ForbiddenException(detail="Admin access required")
     return current_user
+
 
 async def get_pagination_params(
     page: int = Query(default=1, ge=1, description="Page number, starting from 1"),

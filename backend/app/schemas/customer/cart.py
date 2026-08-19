@@ -6,6 +6,7 @@ class CartItemBase(BaseModel):
     product_id: int = Field(..., gt=0, description="Product ID")
     quantity: int = Field(..., gt=0, le=100, description="Quantity (quantity 0-100)")
 
+
 class CartItem(BaseModel):
     product_id: int = Field(..., description="Product ID")
     name: str = Field(..., description="Product name")
@@ -16,14 +17,17 @@ class CartItem(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 class CartResponse(BaseModel):
     items: List[CartItem] = Field(..., description="List of items in cart")
     total: Decimal = Field(..., description="Total cart price")
     items_count: int = Field(..., description="Total number of items in cart")
 
+
 class AddToCartRequest(BaseModel):
     product_id: int = Field(..., gt=0, description="Product ID to add")
     quantity: int = Field(..., gt=0, le=100, description="Quantity to add (1-100)")
+    
 
 class UpdateCartRequest(BaseModel):
     product_id: int = Field(..., gt=0)

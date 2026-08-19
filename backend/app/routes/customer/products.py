@@ -6,20 +6,24 @@ from ...services.customer.product_service import ProductService
 from ...schemas.customer.product import ProductResponse
 from ...schemas.customer.pagination import PaginationParams, PaginatedResponse
 
+
 router = APIRouter(
     prefix="/api/products",
     tags=['products']
 )
+
 
 @router.get("", response_model=PaginatedResponse[ProductResponse], status_code=status.HTTP_200_OK)
 async def get_products(db: AsyncSession = Depends(get_db), pagination: PaginationParams = Depends(get_pagination_params)):
     service = ProductService(db)
     return await service.get_all_products(pagination)
 
+
 @router.get("/{product_id}", response_model=ProductResponse, status_code=status.HTTP_200_OK)
 async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
     service = ProductService(db)
     return await service.get_product_by_id(product_id)
+
 
 @router.get("/category/{category_id}", response_model=PaginatedResponse[ProductResponse], status_code=status.HTTP_200_OK)
 async def get_products_by_category(

@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
+
 class PaginationParams(BaseModel):
     """Container for pagination offset and limit calculation"""
     page: int

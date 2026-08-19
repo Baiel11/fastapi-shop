@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Optional
 from .category import CategoryResponse
 
+
 class ProductBase(BaseModel):
     name: str = Field(
         ...,
@@ -28,6 +29,7 @@ class ProductBase(BaseModel):
     category_id: int = Field(..., description='Category ID')
     image_url: Optional[HttpUrl] = Field(None, description='Product image URL')
 
+
     @field_validator("name")
     @classmethod
     def validate_name(cls, value: str) -> str:
@@ -36,12 +38,14 @@ class ProductBase(BaseModel):
             raise ValueError("Product name cannot be blank")
         return value
     
+    
     @field_validator("description")
     @classmethod
     def normalize_description(cls, value: Optional[str]) -> Optional[str]:
         if value is not None:
             return value.strip()
         return value
+    
     
     @field_validator("price", mode="before")
     @classmethod
@@ -50,6 +54,7 @@ class ProductBase(BaseModel):
         if decimal_price.as_tuple().exponent < -2:
             raise ValueError("Price cannot have more than 2 decimal plces")
         return decimal_price
+    
     
 class ProductCreate(ProductBase):
     pass
@@ -65,6 +70,7 @@ class ProductResponse(BaseModel):
     category: CategoryResponse = Field(..., description="Product category details")
     
     model_config = {"from_attributes": True}
+
 
 class ProductListResponse(BaseModel):
     products: list[ProductResponse]

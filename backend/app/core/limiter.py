@@ -1,6 +1,7 @@
 from slowapi import Limiter
 from starlette.requests import Request
 
+
 def get_client_ip(request: Request) -> str:
     forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:

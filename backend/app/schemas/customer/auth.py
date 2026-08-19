@@ -3,6 +3,7 @@ import re
 
 USERNAME_PATTERN = re.compile(r"^[a-zA-Z0-9_]+$")
 
+
 class UserRegister(BaseModel):
     email: EmailStr
     username: str = Field(
@@ -18,6 +19,7 @@ class UserRegister(BaseModel):
                         description="Password (min 8 chars)"
                         )
     
+    
     @field_validator("username")
     @classmethod
     def validate_username(cls, value: str) -> str:
@@ -25,6 +27,7 @@ class UserRegister(BaseModel):
         if not USERNAME_PATTERN.fullmatch(value):
             raise ValueError("Username can only contain letters, numbers and underscores")
         return value
+    
 
     @field_validator("password")
     @classmethod
@@ -38,14 +41,17 @@ class UserRegister(BaseModel):
             raise ValueError("Password must contain at least one number")
         return value
     
+    
 class UserLogin(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=1)
+
 
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+    
 
 class UserResponse(BaseModel):
     id: int

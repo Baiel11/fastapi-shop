@@ -10,6 +10,7 @@ from ...core.security import (
 )
 from ...core.exceptions import ConflictException, UnauthorizedException, ForbiddenException
 
+
 class AuthService:
     def __init__(self, db: AsyncSession):
         self.user_repo = UserRepository(db)
@@ -30,6 +31,7 @@ class AuthService:
         )
 
         return UserResponse.model_validate(user)
+
     
     async def login(self, data: UserLogin) -> TokenResponse:
         user = await self.user_repo.get_by_email(data.email)
@@ -45,6 +47,7 @@ class AuthService:
             access_token=create_access_token(payload),
             refresh_token=create_refresh_token(payload)
         )
+
     
     async def get_user_by_token(self, token: str) -> User:
         try:

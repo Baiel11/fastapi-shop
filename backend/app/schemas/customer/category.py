@@ -3,6 +3,7 @@ import re
 
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
+
 class CategoryBase(BaseModel):
     name: str = Field(
         ...,
@@ -17,10 +18,12 @@ class CategoryBase(BaseModel):
         description="URL-friendly category name"
     )
 
+
     @field_validator("name")
     @classmethod
     def normalize_name(cls, value: str) -> str:
         return value.strip()
+    
     
     @field_validator("slug")
     @classmethod
@@ -30,8 +33,10 @@ class CategoryBase(BaseModel):
             raise ValueError("Slug must be lowercase words seperated by single hyphens")
         return value
     
+    
 class CategoryCreate(CategoryBase):
     pass
+
 
 class CategoryResponse(CategoryBase):
     id: int = Field(..., description='Unique category identifier')

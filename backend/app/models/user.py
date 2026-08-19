@@ -3,6 +3,7 @@ from sqlalchemy.sql import func
 from datetime import datetime
 from ..core.database import Base
 
+
 class User(Base):
     __tablename__ = "users"
 
