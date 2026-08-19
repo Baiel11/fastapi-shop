@@ -15,6 +15,7 @@ class AuthService:
     def __init__(self, db: AsyncSession):
         self.user_repo = UserRepository(db)
 
+
     async def register(self, data: UserRegister) -> UserResponse:
         if await self.user_repo.get_by_email(data.email):
             raise ConflictException(detail="Email already registered")
@@ -68,6 +69,6 @@ class AuthService:
             raise UnauthorizedException(detail="User not found")
         
         if not user.is_active:
-            raise UnauthorizedException(detail="User is blocked")
+            raise ForbiddenException(detail="Account is disabled")
         
         return user
