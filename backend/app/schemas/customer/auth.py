@@ -49,12 +49,13 @@ class UserLogin(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
-    refresh_token: str
     token_type: str = "bearer"
 
 
 class RefreshRequest(BaseModel):
-    refresh_token: str = Field(..., min_length=1, description="Refresh token to exchange for a new pair")
+    # Optional: the refresh token normally arrives in an HttpOnly cookie.
+    # A body value is accepted as a fallback (tests, non-browser clients).
+    refresh_token: str | None = Field(None, min_length=1, description="Refresh token (fallback when no cookie is present)")
     
 
 class UserResponse(BaseModel):
