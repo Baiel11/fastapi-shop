@@ -3,30 +3,28 @@ import { ref, computed } from 'vue'
 import {
   authAPI,
   getAccessToken,
-  getRefreshToken,
-  storeTokens,
+  storeAccessToken,
   clearTokens,
   onTokensRefreshed,
 } from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
-  // Both tokens are read from storage so a page reload keeps the session.
+  // The access token is read from storage so a page reload keeps the session.
+  // The refresh token lives in an HttpOnly cookie managed by the backend.
   const token = ref(getAccessToken())
-  const refreshToken = ref(getRefreshToken())
   const user = ref(null)
   const loading = ref(false)
   const error = ref(null)
 
   const isAuthenticated = computed(() => !!token.value)
 
-  // Keep in-memory refs in sync when the interceptor rotates the token pair.
-  onTokensRefreshed((accessToken, newRefreshToken) => {
+  // Keep the in-memory ref in sync when the interceptor rotates the access token.
+  onTokensRefreshed((accessToken) => {
     token.value = accessToken
-    refreshToken.value = newRefreshToken
   })
 
   async function initAuth() {
-    if ((token.value || refreshToken.value) && !user.value) {
+    if (token.value && !user.value) {
       loading.value = true
       try {
         const response = await authAPI.getMe()
@@ -48,10 +46,9 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await authAPI.login(email, password)
       const accessToken = response.data.access_token
-      const newRefreshToken = response.data.refresh_token
-      storeTokens(accessToken, newRefreshToken)
+      storeAccessToken(accessToken)
       token.value = accessToken
-      refreshToken.value = newRefreshToken
+      // The refresh token arrived as an HttpOnly cookie — nothing to store here.
 
       // Fetch user details immediately after login
       const userResponse = await authAPI.getMe()
@@ -83,18 +80,16 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * User-initiated logout: revoke the current refresh token server-side,
-   * then clear local state. Best-effort — a network error shouldn't strand
-   * the user in a "still logged in" UI, since we clear locally regardless.
+   * User-initiated logout: revoke the current refresh token server-side
+   * (sent via cookie), then clear local state. Best-effort — a network
+   * error shouldn't strand the user in a "still logged in" UI, since we
+   * clear locally regardless.
    */
   async function logout() {
-    const rt = getRefreshToken()
-    if (rt) {
-      try {
-        await authAPI.logout(rt)
-      } catch (err) {
-        console.error('Failed to revoke refresh token on logout:', err)
-      }
+    try {
+      await authAPI.logout()
+    } catch (err) {
+      console.error('Failed to revoke refresh token on logout:', err)
     }
     clearLocalSession()
   }
@@ -113,7 +108,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   /**
    * Invoked when the interceptor determines the session can no longer be
-   * refreshed (e.g. revoked/expired refresh token). No API call here — the
+   * refreshed (e.g. revoked/expired refresh cookie). No API call here — the
    * backend already rejected the token.
    */
   function handleSessionExpired() {
@@ -123,13 +118,11 @@ export const useAuthStore = defineStore('auth', () => {
   function clearLocalSession() {
     clearTokens()
     token.value = null
-    refreshToken.value = null
     user.value = null
   }
 
   return {
     token,
-    refreshToken,
     user,
     loading,
     error,
