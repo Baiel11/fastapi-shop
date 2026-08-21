@@ -83,6 +83,13 @@
                 👤 {{ authStore.user?.username || 'User' }}
               </span>
               <button
+                @click="handleLogoutAll"
+                class="text-xs text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white underline underline-offset-2 transition-colors cursor-pointer"
+                title="Sign out of all devices"
+              >
+                Log out all devices
+              </button>
+              <button
                 @click="handleLogout"
                 class="px-4 py-2 border-2 border-black dark:border-white text-sm font-bold rounded-xl text-black dark:text-white hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black transition-all active:translate-y-px cursor-pointer"
               >
@@ -122,6 +129,11 @@ const router = useRouter()
 
 function handleLogout() {
   authStore.logout()
+  router.push('/')
+}
+
+function handleLogoutAll() {
+  authStore.logoutAll()
   router.push('/')
 }
 </script>
