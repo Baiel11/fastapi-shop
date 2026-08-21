@@ -6,9 +6,12 @@
  *
  * Auth (JWT) handling lives here so that every request automatically:
  *  - attaches the current access token, and
- *  - transparently rotates a fresh token pair via `/auth/refresh` when the
+ *  - transparently rotates the session via `/auth/refresh` when the
  *    access token expires (401), retrying the original request once.
- * A refresh token that can no longer be exchanged ends the session.
+ *
+ * The refresh token never touches JS: it lives in an HttpOnly cookie that
+ * the browser attaches to /auth/* calls on its own. A refresh that can no
+ * longer be exchanged ends the session.
  */
 
 import axios from 'axios'
@@ -16,41 +19,32 @@ import axios from 'axios'
 // Base API URL from environment variables or default value
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
-// Single source of truth for how both tokens are persisted.
-const TOKEN_KEYS = {
-  access: 'auth_token',
-  refresh: 'auth_refresh_token',
-}
+// Single source of truth for how the access token is persisted.
+// (The refresh token is server-set HttpOnly cookie territory.)
+const TOKEN_KEY = 'auth_token'
 
 export function getAccessToken() {
-  return localStorage.getItem(TOKEN_KEYS.access)
+  return localStorage.getItem(TOKEN_KEY)
 }
 
-export function getRefreshToken() {
-  return localStorage.getItem(TOKEN_KEYS.refresh)
-}
-
-export function storeTokens(accessToken, refreshToken) {
+export function storeAccessToken(accessToken) {
   if (accessToken) {
-    localStorage.setItem(TOKEN_KEYS.access, accessToken)
+    localStorage.setItem(TOKEN_KEY, accessToken)
   } else {
-    localStorage.removeItem(TOKEN_KEYS.access)
-  }
-  if (refreshToken) {
-    localStorage.setItem(TOKEN_KEYS.refresh, refreshToken)
-  } else {
-    localStorage.removeItem(TOKEN_KEYS.refresh)
+    localStorage.removeItem(TOKEN_KEY)
   }
 }
 
 export function clearTokens() {
-  localStorage.removeItem(TOKEN_KEYS.access)
-  localStorage.removeItem(TOKEN_KEYS.refresh)
+  localStorage.removeItem(TOKEN_KEY)
 }
 
-// Create axios instance with default settings
+// Create axios instance with default settings.
+// withCredentials lets the browser send/receive the refresh-token cookie
+// on cross-origin calls (localhost:5173 -> localhost:8000).
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -89,7 +83,7 @@ function notifySessionExpired() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Token-refresh notification, so the store keeps its refs in sync.
+// Token-refresh notification, so the store keeps its ref in sync.
 // ─────────────────────────────────────────────────────────────
 let tokensRefreshedHandler = null
 
@@ -97,8 +91,8 @@ export function onTokensRefreshed(handler) {
   tokensRefreshedHandler = handler
 }
 
-function notifyTokensRefreshed(accessToken, refreshToken) {
-  if (tokensRefreshedHandler) tokensRefreshedHandler(accessToken, refreshToken)
+function notifyTokensRefreshed(accessToken) {
+  if (tokensRefreshedHandler) tokensRefreshedHandler(accessToken)
 }
 
 // Single-flight refresh: concurrent 401s share one `/auth/refresh` call
@@ -107,14 +101,12 @@ function notifyTokensRefreshed(accessToken, refreshToken) {
 let refreshPromise = null
 
 async function refreshAccessToken() {
-  const refreshToken = getRefreshToken()
-  if (!refreshToken) {
-    throw new Error('No refresh token available')
-  }
-  const { data } = await apiClient.post('/auth/refresh', { refresh_token: refreshToken })
-  storeTokens(data.access_token, data.refresh_token)
+  // The current refresh token rides along in its HttpOnly cookie —
+  // nothing to read in JS. A missing/expired/revoked cookie simply 401s.
+  const { data } = await apiClient.post('/auth/refresh')
+  storeAccessToken(data.access_token)
   sessionExpiredNotified = false // a successful refresh means the session is alive again
-  notifyTokensRefreshed(data.access_token, data.refresh_token)
+  notifyTokensRefreshed(data.access_token)
   return data.access_token
 }
 
@@ -167,11 +159,12 @@ export const authAPI = {
   getMe() {
     return apiClient.get('/auth/me')
   },
-  refresh(refreshToken) {
-    return apiClient.post('/auth/refresh', { refresh_token: refreshToken })
+  refresh() {
+    return apiClient.post('/auth/refresh')
   },
-  logout(refreshToken) {
-    return apiClient.post('/auth/logout', { refresh_token: refreshToken })
+  logout() {
+    // The refresh token arrives via cookie and gets revoked + cleared server-side.
+    return apiClient.post('/auth/logout')
   },
   logoutAll() {
     return apiClient.post('/auth/logout-all')
