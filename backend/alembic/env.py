@@ -10,7 +10,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from app.core.config import settings
 from app.core.database.session import Base
-from app.models import Category, Product, User
+from app.models import Category, Product, User, RefreshToken
 
 config = context.config
 if config.config_file_name is not None:
