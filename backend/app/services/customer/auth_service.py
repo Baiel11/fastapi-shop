@@ -5,7 +5,7 @@ from jose import JWTError
 from ...models.user import User  # ← needed for return type annotation
 from ...repositories.user_repository import UserRepository
 from ...repositories.refresh_token_repository import RefreshTokenRepository
-from ...schemas.customer.auth import UserRegister, UserLogin, TokenResponse, UserResponse
+from ...schemas.customer.auth import UserRegister, UserLogin, UserResponse
 from ...core.security import (
     hash_password, verify_password,
     create_access_token, create_refresh_token, decode_token
@@ -37,7 +37,7 @@ class AuthService:
         return UserResponse.model_validate(user)
 
     
-    async def login(self, data: UserLogin) -> TokenResponse:
+    async def login(self, data: UserLogin) -> tuple[str, str]:
         user = await self.user_repo.get_by_email(data.email)
 
         if not user or not verify_password(data.password, user.hashed_password):
@@ -49,7 +49,7 @@ class AuthService:
         return await self._issue_token_pair(user.id)
 
 
-    async def refresh(self, refresh_token: str) -> TokenResponse:
+    async def refresh(self, refresh_token: str) -> tuple[str, str]:
         try:
             payload = decode_token(refresh_token)
             token_type: str = payload.get("type")
@@ -62,9 +62,7 @@ class AuthService:
         except (JWTError, ValueError):
             raise UnauthorizedException(detail="Invalid or expired refresh token")
 
-        # Rotation is atomic: this call claims the old token (or loses the
-        # race to a concurrent/replayed request and is rejected). The token
-        # is consumed before any further work, so it can never be reused.
+
         if not await self.refresh_token_repo.revoke(jti):
             raise UnauthorizedException(detail="Refresh token has been revoked or expired")
 
@@ -96,7 +94,7 @@ class AuthService:
         await self.refresh_token_repo.revoke_all_for_user(user.id)
 
 
-    async def _issue_token_pair(self, user_id: int) -> TokenResponse:
+    async def _issue_token_pair(self, user_id: int) -> tuple[str, str]:
         payload = {"sub": str(user_id)}
         refresh_token = create_refresh_token(payload)
         refresh_payload = decode_token(refresh_token)
@@ -111,10 +109,7 @@ class AuthService:
         # paths so expired rows don't accumulate without a background job.
         await self.refresh_token_repo.delete_expired()
 
-        return TokenResponse(
-            access_token=create_access_token(payload),
-            refresh_token=refresh_token,
-        )
+        return create_access_token(payload), refresh_token
 
     
     async def get_user_by_token(self, token: str) -> User:
