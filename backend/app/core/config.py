@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
 
+    refresh_cookie_name: str = "refresh_token"
+    refresh_cookie_path: str = "/api/auth"
+    cookie_samesite: str = "lax"
+
     class Config:
         env_file = (".env", "../.env")
         extra = "ignore"
