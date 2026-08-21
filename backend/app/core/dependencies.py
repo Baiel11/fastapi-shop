@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .database import get_db
 from ..services.customer.auth_service import AuthService
+from ..models.user import User
 from .exceptions import ForbiddenException
 from ..schemas.customer.pagination import PaginationParams
 
@@ -14,13 +15,13 @@ bearer_scheme = HTTPBearer()
 async def get_current_user(
         credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
         db: AsyncSession = Depends(get_db)
-    ):
+    ) -> User:
     token = credentials.credentials
     service = AuthService(db)
     return await service.get_user_by_token(token)
 
 
-async def require_admin(current_user=Depends(get_current_user)):
+async def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if not current_user.is_admin:
         raise ForbiddenException(detail="Admin access required")
     return current_user
