@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.user import User
 
@@ -39,6 +39,17 @@ class UserRepository:
         return user
     
     
+    async def update_password(self, user_id: int, hashed_password: str) -> Optional[User]:
+        stmt = (
+            update(User)
+            .where(User.id == user_id)
+            .values(hashed_password=hashed_password)
+        )
+        await self.db.execute(stmt)
+        await self.db.commit()
+        return await self.get_by_id(user_id)
+
+
     async def count_all(self) -> int:
         result = await self.db.execute(select(func.count(User.id)))
         return result.scalar() or 0
