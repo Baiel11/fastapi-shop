@@ -166,6 +166,12 @@ export const authAPI = {
     // The refresh token arrives via cookie and gets revoked + cleared server-side.
     return apiClient.post('/auth/logout')
   },
+  forgotPassword(email) {
+    return apiClient.post('/auth/forgot-password', { email })
+  },
+  resetPassword(token, password) {
+    return apiClient.post('/auth/reset-password', { token, password })
+  },
   logoutAll() {
     return apiClient.post('/auth/logout-all')
   },
