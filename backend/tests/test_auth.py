@@ -10,6 +10,14 @@ REFRESH_URL = "/api/auth/refresh"
 LOGOUT_URL = "/api/auth/logout"
 LOGOUT_ALL_URL = "/api/auth/logout-all"
 
+# The refresh token lives in an HttpOnly cookie — never in the JSON body.
+# httpx's client jar stores it automatically after login, same as a browser.
+REFRESH_COOKIE = "refresh_token"
+
+
+def get_refresh_cookie(client) -> str | None:
+    return client.cookies.get(REFRESH_COOKIE)
+
 
 async def register_and_login(client, email="refreshtest@example.com", username="refresh10"):
     await client.post(REGISTER_URL, json={
@@ -42,7 +50,7 @@ async def test_register_duplicate_email(client):
 
 
 @pytest.mark.asyncio
-async def test_login_success(client):
+async def test_login_returns_access_token_and_sets_refresh_cookie(client):
     await client.post(REGISTER_URL, json={
         "email": "login@example.com",
         "username": "loginuser",
@@ -50,13 +58,18 @@ async def test_login_success(client):
     })
     response = await client.post(LOGIN_URL, json={
         "email": "login@example.com",
-        "username": "loginuser",
         "password": "SecurePass1"
     })
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
-    assert "refresh_token" in data
+    # Refresh token must NOT leak into the JS-readable body...
+    assert "refresh_token" not in data
+    # ...it arrives as an HttpOnly Set-Cookie instead.
+    set_cookie = response.headers["set-cookie"]
+    assert f"{REFRESH_COOKIE}=" in set_cookie
+    assert "HttpOnly" in set_cookie
+    assert get_refresh_cookie(client) is not None
 
 
 @pytest.mark.asyncio
@@ -91,29 +104,27 @@ async def test_get_me_unauthenticated(client):
 
 
 @pytest.mark.asyncio
-async def test_refresh_returns_new_pair(client):
-    login = await register_and_login(client)
-    assert login.status_code == 200
-    refresh_token = login.json()["refresh_token"]
-
-    response = await client.post(REFRESH_URL, json={"refresh_token": refresh_token})
+async def test_refresh_rotates_cookie_pair(client):
+    await register_and_login(client)
+    old_refresh = get_refresh_cookie(client)
+    assert old_refresh is not None
+    response = await client.post(REFRESH_URL)
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
-    assert "refresh_token" in data
-    assert data["access_token"] != login.json()["access_token"]
-    assert data["refresh_token"] != refresh_token
+
+    new_refresh = get_refresh_cookie(client)
+    assert new_refresh is not None
+    assert new_refresh != old_refresh
 
 
 @pytest.mark.asyncio
 async def test_refresh_rotates_and_old_token_rejected(client):
-    login = await register_and_login(client, email="rotate@example.com", username="rotateuser")
-    old_refresh = login.json()["refresh_token"]
-
-    response = await client.post(REFRESH_URL, json={"refresh_token": old_refresh})
+    await register_and_login(client, email="rotate@example.com", username="rotateuser")
+    old_refresh = get_refresh_cookie(client)
+    response = await client.post(REFRESH_URL)
     assert response.status_code == 200
-
-    # Old refresh token must now be rejected (rotation)
+    client.cookies.clear()
     response = await client.post(REFRESH_URL, json={"refresh_token": old_refresh})
     assert response.status_code == 401
 
@@ -125,8 +136,16 @@ async def test_refresh_invalid_token(client):
 
 
 @pytest.mark.asyncio
+async def test_refresh_without_any_credentials(client):
+    client.cookies.clear()
+    response = await client.post(REFRESH_URL)
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
 async def test_refresh_with_access_token_rejected(client):
     login = await register_and_login(client, email="misuse@example.com", username="misuseuser")
+    client.cookies.clear()
     response = await client.post(REFRESH_URL, json={"refresh_token": login.json()["access_token"]})
     assert response.status_code == 401
 
@@ -135,24 +154,26 @@ async def test_refresh_with_access_token_rejected(client):
 async def test_logout_revokes_refresh_token(client):
     login = await register_and_login(client, email="logout@example.com", username="logoutuser")
     token = login.json()["access_token"]
-    refresh_token = login.json()["refresh_token"]
+    refresh_token = get_refresh_cookie(client)
 
     logout = await client.post(
         LOGOUT_URL,
-        json={"refresh_token": refresh_token},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert logout.status_code == 204
 
-    # After logout the refresh token must be revoked
+    # Cookie cleared client-side by the logout response itself...
+    cleared = logout.headers.get("set-cookie", "")
+    assert 'Max-Age=0' in cleared or 'expires=' in cleared
+
+    # ...and revoked server-side: replaying the old value must fail.
     response = await client.post(REFRESH_URL, json={"refresh_token": refresh_token})
     assert response.status_code == 401
 
 
 @pytest.mark.asyncio
 async def test_login_persists_refresh_token(client):
-    login = await register_and_login(client, email="persist@example.com", username="persist10")
-    assert login.status_code == 200
+    await register_and_login(client, email="persist@example.com", username="persist10")
 
     async with TestSessionLocal() as db:
         result = await db.execute(select(RefreshToken))
@@ -168,18 +189,26 @@ async def test_logout_all_revokes_every_session(client):
         "email": "multi@example.com", "username": "multiuser", "password": "SecurePass1"
     })
     login1 = await client.post(LOGIN_URL, json={"email": "multi@example.com", "password": "SecurePass1"})
-    login2 = await client.post(LOGIN_URL, json={"email": "multi@example.com", "password": "SecurePass1"})
-    assert login1.status_code == 200 and login2.status_code == 200
     access = login1.json()["access_token"]
-    refresh1 = login1.json()["refresh_token"]
-    refresh2 = login2.json()["refresh_token"]
+    refresh1 = get_refresh_cookie(client)
+    login2 = await client.post(LOGIN_URL, json={"email": "multi@example.com", "password": "SecurePass1"})
+    refresh2 = get_refresh_cookie(client)
+
+    assert login1.status_code == 200 and login2.status_code == 200
+    assert refresh1 != refresh2
 
     response = await client.post(LOGOUT_ALL_URL, headers={"Authorization": f"Bearer {access}"})
     assert response.status_code == 204
 
-    # Neither session remains usable after logout-all
     assert (await client.post(REFRESH_URL, json={"refresh_token": refresh1})).status_code == 401
     assert (await client.post(REFRESH_URL, json={"refresh_token": refresh2})).status_code == 401
+
+
+def refresh_token_from_set_cookie(response) -> str:
+    """Pull the raw refresh token out of a response's Set-Cookie header."""
+    header = response.headers["set-cookie"]
+    value = header.split(f"{REFRESH_COOKIE}=", 1)[1]
+    return value.split(";", 1)[0]
 
 
 @pytest.mark.asyncio
@@ -191,11 +220,11 @@ async def test_logout_rejects_another_users_token(client):
         "email": "ownerb@example.com", "username": "ownerb", "password": "SecurePass1"
     })
     login_a = await client.post(LOGIN_URL, json={"email": "ownera@example.com", "password": "SecurePass1"})
-    login_b = await client.post(LOGIN_URL, json={"email": "ownerb@example.com", "password": "SecurePass1"})
     access_a = login_a.json()["access_token"]
-    refresh_b = login_b.json()["refresh_token"]
 
-    # A must not be able to revoke B's session
+    login_b = await client.post(LOGIN_URL, json={"email": "ownerb@example.com", "password": "SecurePass1"})
+    refresh_b = refresh_token_from_set_cookie(login_b)
+
     response = await client.post(
         LOGOUT_URL,
         json={"refresh_token": refresh_b},
@@ -203,7 +232,6 @@ async def test_logout_rejects_another_users_token(client):
     )
     assert response.status_code == 401
 
-    # B's refresh token is untouched and still usable
     assert (await client.post(REFRESH_URL, json={"refresh_token": refresh_b})).status_code == 200
 
 
