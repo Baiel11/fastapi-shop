@@ -3,9 +3,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from .middleware.security import SecurityHeadersMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
 from .core.database.session import engine
 from .core.config import settings
-from .routes.customer import products_router, categories_router, cart_router, auth_router
+from .routes.customer import (
+    products_router,
+    categories_router,
+    cart_router,
+    auth_router,
+    session_router,
+    password_router,
+)
 from .routes.admin import (
     dashboard_router,
     admin_products_router,
@@ -61,6 +72,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Customer routes
 app.include_router(auth_router)
+app.include_router(session_router)
+app.include_router(password_router)
 app.include_router(cart_router)
 app.include_router(categories_router)
 app.include_router(products_router)
