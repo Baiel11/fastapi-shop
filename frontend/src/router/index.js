@@ -10,6 +10,8 @@ import ProductDetailPage from '@/views/ProductDetailPage.vue'
 import CartPage from '@/views/CartPage.vue'
 import LoginPage from '@/views/LoginPage.vue'
 import RegisterPage from '@/views/RegisterPage.vue'
+import ForgotPasswordPage from '@/views/ForgotPasswordPage.vue'
+import ResetPasswordPage from '@/views/ResetPasswordPage.vue'
 import NotFoundPage from '@/views/NotFoundPage.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -54,6 +56,22 @@ const router = createRouter({
         title: 'Create Account',
         guestOnly: true,
       },
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: ForgotPasswordPage,
+      meta: {
+        title: 'Reset Password',
+        guestOnly: true,
+      },
+    },
+    {
+      // Token-gated via the emailed link, so no auth/guest restrictions
+      path: '/reset-password',
+      name: 'reset-password',
+      component: ResetPasswordPage,
+      meta: { title: 'Choose a New Password' },
     },
     {
       // Catch all unmatched routes → 404 page
