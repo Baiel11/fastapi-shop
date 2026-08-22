@@ -44,6 +44,15 @@
           </div>
         </div>
 
+        <div class="flex items-center justify-end">
+          <router-link
+            to="/forgot-password"
+            class="text-sm font-medium text-gray-600 dark:text-zinc-400 underline hover:text-black dark:hover:text-white transition-colors"
+          >
+            Forgot your password?
+          </router-link>
+        </div>
+
         <div>
           <button
             type="submit"
