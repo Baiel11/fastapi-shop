@@ -2,7 +2,6 @@ from fastapi import Request, Response
 
 from ..config import settings
 from ..exceptions import UnauthorizedException
-from ...schemas.customer.auth import RefreshRequest
 
 SECURE_COOKIES = not settings.debug
 
@@ -29,12 +28,11 @@ def clear_refresh_cookie(response: Response) -> None:
     )
 
 
-def extract_refresh_token(request: Request, data: RefreshRequest | None) -> str:
+def extract_refresh_token(request: Request, fallback_token: str | None = None) -> str:
     """Read-side of the refresh cookie: prefer the HttpOnly cookie,
-    accept a body value as fallback for non-browser clients."""
-    token = request.cookies.get(settings.refresh_cookie_name) or (
-        data.refresh_token if data else None
-    )
+    accept a body value as fallback for non-browser clients.
+    Takes a plain string — core never imports schemas."""
+    token = request.cookies.get(settings.refresh_cookie_name) or fallback_token
     if not token:
         raise UnauthorizedException(detail="Refresh token missing")
     return token

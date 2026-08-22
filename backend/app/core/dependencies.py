@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .database import get_db
-from ..services.customer.auth_service import AuthService
+from ..services.customer.session_service import SessionService
 from ..models.user import User
 from .exceptions import ForbiddenException
 from ..schemas.customer.pagination import PaginationParams
@@ -17,7 +17,7 @@ async def get_current_user(
         db: AsyncSession = Depends(get_db)
     ) -> User:
     token = credentials.credentials
-    service = AuthService(db)
+    service = SessionService(db)
     return await service.get_user_by_token(token)
 
 

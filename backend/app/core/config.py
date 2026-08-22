@@ -18,6 +18,19 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
 
+    reset_token_expire_minutes: int = 30
+    frontend_url: str = "http://localhost:5173"
+
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    email_from: str | None = None
+
+    @property
+    def smtp_configured(self) -> bool:
+        return bool(self.smtp_user and self.smtp_password)
+
     refresh_cookie_name: str = "refresh_token"
     refresh_cookie_path: str = "/api/auth"
     cookie_samesite: str = "lax"
